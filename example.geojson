@@ -1,0 +1,21 @@
+{
+    "type": "FeatureCollection",
+    "name": "08142023-001",
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "date": "08/14/2023",
+                "type_of_alert": "gold mining",
+                "detection_id": "08142023-001"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -54.117676498677,
+                    3.312402112301291
+                ]
+            }
+        }
+    ]
+}
