@@ -16,6 +16,36 @@
                     3.312402112301291
                 ]
             }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "date": "08/12/2023",
+                "type_of_alert": "logging",
+                "detection_id": "08122023-001"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -54.024968,
+                    3.414382
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "date": "07/12/2023",
+                "type_of_alert": "land invasion",
+                "detection_id": "07122023-001"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -54.017286,
+                    3.427148
+                ]
+            }
         }
     ]
 }

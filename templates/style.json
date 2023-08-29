@@ -3,15 +3,6 @@
     "sprite": "https://maps.tilehosting.com/styles/basic/sprite",
     "glyphs": "https://maps.tilehosting.com/fonts/{fontstack}/{range}.pbf.pict?key=alS7XjesrAd6uvek9nRE",
     "sources": {
-      "raster-tiles": {
-        "type": "raster",
-        "tiles": [
-          "https://ecn.t0.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=587&mkt=en-gb&n=z",
-          "https://ecn.t1.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=587&mkt=en-gb&n=z",
-          "https://ecn.t2.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=587&mkt=en-gb&n=z",
-          "https://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=587&mkt=en-gb&n=z"
-        ]
-      }
     },
     "layers": [
       {
@@ -20,12 +11,6 @@
         "paint": {
           "background-color": "#1f1f1f"
         }
-      },
-      {
-        "id": "satellite-layer",
-        "type": "raster",
-        "source": "raster-tiles",
-        "paint": {}
       }
     ],
     "id": "change_detection_alerts"

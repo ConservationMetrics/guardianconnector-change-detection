@@ -4,7 +4,11 @@ This WIP repo contains a Python script which takes an input GeoJSON file and gen
 
 ## Prerequisites
 
+With a package manager like `pip`,
+
+* Install [geojson](https://pypi.org/project/geojson/) for creating a GeoJSON object.
 * Install [Tippecanoe](https://github.com/felt/tippecanoe) for conversion of GeoJSON to vector MBTiles.
+* Install [MBUtil](https://github.com/mapbox/mbutil) for conversion of XYZ directory to raster MBTiles.
 
 ## Configure
 
@@ -26,7 +30,8 @@ Currently, the script generates the following outputs in the `/outputs` director
 
 * **GeoJSON**: a copy of the GeoJSON file.
 * **HTML map**: to preview the GeoJSON file on a Mapbox satellite imagery + streets map. The map shows the GeoJSON as a label and zooms to the maximum extent of the data. Currently, the template is only mapping Point GeoJSON data.
-* **Vector MBTiles**: MBTiles of the GeoJSON to be used in map stylesheets for data collection applications.
+* **Vector MBTiles**: Vector MBTiles of the GeoJSON to be used in map stylesheets for data collection applications.
+* **Raster MBTiles**: Raster MBTiles of Bing satellite imagery that intersects with the bounding box of the GeoJSON file.
 * **Stylesheet**: A `style.json` file which overlays the MBTiles on top of Bing satellite imagery. The reason for using Bing imagery is because Bing does not require access tokens, so we don't run into any issues with API token limits.
 
 ## How to use the outputs
