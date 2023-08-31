@@ -4,10 +4,14 @@ import sys
 from dotenv import load_dotenv
 import json
 import geojson
-from shutil import copyfile
+from shutil import copyfile, copytree
+import shutil
 import requests
 from itertools import product
 import subprocess
+import math
+import mercantile
+import tarfile
 
 # Load environment variables from .env file
 load_dotenv()
@@ -139,23 +143,28 @@ except Exception as e:
 print(f"\033[1m\033[32mMap HTML file generated:\033[0m {output_path}")
 
 # STEP 4: Generate vector MBTiles from GeoJSON
+# First, let's create the Mapbox-map dir if it doesn't already exist
+mapbox_map_dir = os.path.join(output_directory, "mapbox-map")
+os.makedirs(mapbox_map_dir, exist_ok=True)
+os.makedirs(f'{mapbox_map_dir}/tiles', exist_ok=True)
+
 # Determine the output MBTiles filename
 if args.output is None:
-    v_mbtiles_output_filename = os.path.splitext(os.path.basename(args.input))[0] + '-vector.mbtiles'
+    vector_mbtiles_output_filename = os.path.splitext(os.path.basename(args.input))[0] + '-vector'
 else:
-    v_mbtiles_output_filename = os.path.splitext(os.path.basename(args.output))[0] + '-vector.mbtiles'
+    vector_mbtiles_output_filename = os.path.splitext(os.path.basename(args.output))[0] + '-vector'
 
-# Determine the full path to the output MBTiles file
-v_mbtiles_output_path = os.path.join(output_directory, v_mbtiles_output_filename)
+# Determine the full path to the output MBTiles file within the 'mapbox-map/' directory
+vector_mbtiles_output_path = os.path.join(mapbox_map_dir, 'tiles', f"{vector_mbtiles_output_filename}.mbtiles")
 
 # Generate MBTiles using tippecanoe
-command = f"tippecanoe -o {v_mbtiles_output_path} --force --no-tile-compression {args.input} --layer=geojson-layer"
+command = f"tippecanoe -o {vector_mbtiles_output_path} --force --no-tile-compression {args.input} --layer=geojson-layer"
 
 try:
     os.system(command)
-    print(f"\033[1m\033[32mMBTiles file generated:\033[0m {v_mbtiles_output_path}")
+    print(f"\033[1m\033[32mVector MBTiles file generated:\033[0m {vector_mbtiles_output_path}")
 except Exception as e:
-    print(f"\033[1m\033[31mError generating MBTiles:\033[0m {e}")
+    print(f"\033[1m\033[31mError generating Vector MBTiles:\033[0m {e}")
     sys.exit(1)
     
 # STEP 5: Generate raster MBTiles from satellite imagery and bbox
@@ -163,7 +172,7 @@ except Exception as e:
 xyz_url_template = "http://ecn.t3.tiles.virtualearth.net/tiles/a{q}.jpeg?g=1"
 
 # Define the max zoom level and bounding box
-r_max_zoom = 14
+raster_max_zoom = 16 # Change this if needed
 bbox = bounding_box['geometry']['coordinates'][0]
 
 # Define the output directory
@@ -172,27 +181,40 @@ xyz_output_dir = f"{output_directory}/xyz_tiles"
 # Create the output directory if it doesn't exist
 os.makedirs(xyz_output_dir, exist_ok=True)
 
-# Iterate through the zoom levels and rows and columns of tiles within the bounding box
-# TODO: calibrate this using Bing maps tile system: https://learn.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system
-for zoom_level in range(1, r_max_zoom + 1):
-    num_tiles = 2 ** zoom_level
+def latlon_to_tilexy(lat, lon, zoom):
+    tile = mercantile.tile(lon, lat, zoom)
+    return tile.x, tile.y
 
-    col_range = row_range = range(num_tiles)
+def download_xyz_tile(xyz_url, filename):
+    if os.path.exists(filename):
+        return
 
-    for col, row in product(col_range, row_range):
-        # Calculate the geographical coordinates of the current tile's corners
-        lon_left = -180 + 360 * col / num_tiles
-        lon_right = -180 + 360 * (col + 1) / num_tiles
-        lat_top = 90 - 180 * row / num_tiles
-        lat_bottom = 90 - 180 * (row + 1) / num_tiles
+    # Download the tile and save it to the specified location
+    response = requests.get(xyz_url)
+    if response.status_code == 200:
+        with open(filename, "wb") as f:
+            f.write(response.content)
+        # Remove hash if you want to see each file download printed
+        # print(f"Downloaded at zoom level {zoom_level}: {xyz_url} -> {filename}")
+    else:
+        print(f"Failed to download: {xyz_url} (Status code: {response.status_code})")
+        print(response.text)
 
-        # Check if the current tile's bounding box intersects with the area of interest
-        if (lon_right >= bbox[0][0] and lon_left <= bbox[1][0] and
-            lat_bottom <= bbox[1][1] and lat_top >= bbox[0][1]):
+bbox_top_left = bbox[0]
+bbox_bottom_right = bbox[2]
 
+print("Downloading satellite imagery raster XYZ tiles...")
+# Iterate through the zoom levels
+for zoom_level in range(1, raster_max_zoom + 1):
+    # Calculate the tile coordinates for the top-left and bottom-right corners of the bbox
+    col_start, row_end = latlon_to_tilexy(bbox_top_left[1], bbox_top_left[0], zoom_level)
+    col_end, row_start = latlon_to_tilexy(bbox_bottom_right[1], bbox_bottom_right[0], zoom_level)
+
+    for col in range(col_start, col_end + 1):
+        for row in range(row_start, row_end + 1):
             # Generate the quadkey based on the current row and column
             quadkey = ""
-            for i in range(zoom_level, 1, -1):
+            for i in range(zoom_level, 0, -1):
                 digit = 0
                 mask = 1 << (i - 1)
                 if (col & mask) != 0:
@@ -205,36 +227,56 @@ for zoom_level in range(1, r_max_zoom + 1):
             xyz_url = xyz_url_template.format(q=quadkey)
 
             # Define the filename for the downloaded tile
-            filename = f"{xyz_output_dir}/{zoom_level}/{row}/{col}.jpg"
+            filename = f"{xyz_output_dir}/{zoom_level}/{col}/{row}.jpg"
 
             # Create the directory structure if it doesn't exist
             os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-            # Download the tile and save it to the specified location
-            response = requests.get(xyz_url)
-            if response.status_code == 200:
-                with open(filename, "wb") as f:
-                    f.write(response.content)
-                print(f"Downloaded: {xyz_url} -> {filename}")
-            else:
-                print(f"Failed to download: {xyz_url}")
+            # Download the tiles
+            download_xyz_tile(xyz_url, filename)
+    print(f"Zoom level {zoom_level} downloaded")
+
+# Create metadata.json
+metadata = {
+    "name": output_filename,
+    "description": "Satellite imagery from Bing Virtual Earth intersecting with the bounding box of the change detection alert GeoJSON",
+    "version": "1.0.0",
+    "attribution": "Conservation Metrics",
+    "format": "jpg",
+    "type": "overlay"
+}
+
+metadata_file_path = os.path.join(xyz_output_dir, "metadata.json")
+
+with open(metadata_file_path, "w") as metadata_file:
+    json.dump(metadata, metadata_file, indent=4)
+
+print(f"XYZ tiles metadata.json saved to {metadata_file_path}")
 
 # STEP 6: Convert XYZ directory to MBTiles
 # Determine the output MBTiles filename
 if args.output is None:
-    r_mbtiles_output_filename = os.path.splitext(os.path.basename(args.input))[0] + '-raster.mbtiles'
+    raster_mbtiles_output_filename = os.path.splitext(os.path.basename(args.input))[0] + '-raster'
 else:
-    r_mbtiles_output_filename = os.path.splitext(os.path.basename(args.output))[0] + '-raster.mbtiles'
+    raster_mbtiles_output_filename = os.path.splitext(os.path.basename(args.output))[0] + '-raster'
 
-command = f"mb-util {xyz_output_dir} {output_directory}/{r_mbtiles_output_filename}"
+# Delete the existing MBTiles file if it exists
+raster_mbtiles_output_path = os.path.join(mapbox_map_dir, 'tiles', f"{raster_mbtiles_output_filename}.mbtiles")
+if os.path.exists(raster_mbtiles_output_path):
+    os.remove(raster_mbtiles_output_path)
+    print(f"Deleted existing MBTiles file: {raster_mbtiles_output_path}")
 
+command = f"mb-util --image_format=jpg --silent {xyz_output_dir} {raster_mbtiles_output_path}"
+
+print("Creating raster mbtiles...")
 try:
     subprocess.call(command, shell=True)
-    print("\033[1m\033[32mRaster MBTiles file generated:\033[0m", r_mbtiles_output_filename)
+    print()
+    print("\033[1m\033[32mRaster MBTiles file generated:\033[0m", f"{raster_mbtiles_output_path}")
 except subprocess.CalledProcessError:
     raise RuntimeError(f"\033[1m\033[31mFailed to generate MBTiles using command:\033[0m {command}")
 
-# STEP 6: Generate stylesheet with MBTiles included
+# STEP 7: Generate stylesheet with MBTiles included
 # Load the style.json template
 style_template_path = os.path.join('templates', 'style.json')
 try:
@@ -244,17 +286,30 @@ except Exception as e:
     print(f"\033[1m\033[31mError reading style.json template:\033[0m {e}")
     sys.exit(1)
 
+# Copy 'fonts' and 'sprites' directories to the output directory
+fonts_archive_path = 'templates/fonts.tar.gz'
+sprites_dir_path = os.path.join('templates', 'sprites')
+output_fonts_dir = os.path.join(mapbox_map_dir, 'fonts')
+output_sprites_dir = os.path.join(mapbox_map_dir, 'sprites')
+
+if not os.path.exists(output_fonts_dir):
+    with tarfile.open(fonts_archive_path, 'r:gz') as archive:
+        archive.extractall(output_fonts_dir)
+
+if not os.path.exists(output_sprites_dir):
+    shutil.copytree(sprites_dir_path, output_sprites_dir)
+
 # Add mbtiles sources and layers to style.json template
 vector_source = {
     "type": "vector",
-    "url": f"mbtiles://{v_mbtiles_output_filename}",
-    "maxzoom": 14  # Adjust maxzoom as needed
+    "url": f"{vector_mbtiles_output_filename}/{{z}}/{{x}}/{{y}}.pbf"
 }
 
 raster_source = { 
     "type": "raster",
-    "url": f"mbtiles://{r_mbtiles_output_filename}",
-    "maxzoom": r_max_zoom  # Adjust maxzoom as needed    
+    "url": f"{raster_mbtiles_output_filename}/{{z}}/{{x}}/{{y}}.jpg",
+     "tileSize": 256,
+    "maxzoom": raster_max_zoom   
 }
 
 raster_layer = {
@@ -302,7 +357,7 @@ style_template['layers'].append(vector_layer)
 style_template['layers'].append(label_layer)
 
 # Write the final style.json content to the output file
-style_output_path = os.path.join(output_directory, 'style.json')
+style_output_path = os.path.join(mapbox_map_dir, 'style.json')
 try:
     with open(style_output_path, 'w') as style_output_file:
         json.dump(style_template, style_output_file, indent=4)

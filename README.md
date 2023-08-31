@@ -1,14 +1,13 @@
 # GuardianConnector Change Detection
 
-This WIP repo contains a Python script which takes an input GeoJSON file and generates several outputs to show the data on a satellite imagery map, and prepare offline map assets for usage in data collection applications.
+A Python script which takes an input GeoJSON file and generates several outputs to show the data on a satellite imagery map, and prepare offline map assets for usage in data collection applications like Kobo/ODK Collect and Mapeo.
 
 ## Prerequisites
 
-With a package manager like `pip`,
-
-* Install [geojson](https://pypi.org/project/geojson/) for creating a GeoJSON object.
-* Install [Tippecanoe](https://github.com/felt/tippecanoe) for conversion of GeoJSON to vector MBTiles.
-* Install [MBUtil](https://github.com/mapbox/mbutil) for conversion of XYZ directory to raster MBTiles.
+With `pip` (or your package manager of choice):
+```
+pip install dotenv shututil requests geojson mercantile mbutil tippecanoe
+```
 
 ## Configure
 
@@ -30,12 +29,36 @@ Currently, the script generates the following outputs in the `/outputs` director
 
 * **GeoJSON**: a copy of the GeoJSON file.
 * **HTML map**: to preview the GeoJSON file on a Mapbox satellite imagery + streets map. The map shows the GeoJSON as a label and zooms to the maximum extent of the data. Currently, the template is only mapping Point GeoJSON data.
+* **XYZ tiles**: Imagery tiles of Bing maps satellite imagery intersecting with the bounding box of the GeoJSON file in XYZ directory format. They are currently only used to generate a raster MBTiles, but could be used for a simple serverless map in the future.
 * **Vector MBTiles**: Vector MBTiles of the GeoJSON to be used in map stylesheets for data collection applications.
 * **Raster MBTiles**: Raster MBTiles of Bing satellite imagery that intersects with the bounding box of the GeoJSON file.
 * **Stylesheet**: A `style.json` file which overlays the MBTiles on top of Bing satellite imagery. The reason for using Bing imagery is because Bing does not require access tokens, so we don't run into any issues with API token limits.
 
+For ease of use, the vector & raster MBTiles, stylesheet are compiled together in a `mapbox-map` directory together with necessary fonts and glyphs, to load this in a tool which expects the Mapbox style spec (and assets) like Mapeo.
+
+```
+example/
+├── example.geojson
+├── example.html
+├── mapeo-map/
+│   ├── fonts/
+│   │   ├── ... (font files)
+│   ├── sprites/
+│   │   ├── ... (sprite image files)
+│   ├── tiles/
+│   │   ├── your-raster-tiles.mbtiles
+│   │   ├── your-vector-tiles.mbtiles
+│   ├── style.json
+│   ├── index.html
+│   └── ...
+└── xyz_tiles/
+    ├── ... metadata.json
+    ├── ... (XYZ tile files) 
+```
+
 ## How to use the outputs
 
-ODK/Kobo Collect can [render the vector MBTiles](https://docs.getodk.org/collect-offline-maps/) but displayed without styling; each feature is displayed in a different color picked by the applications. However, the process of transferring the MBTile file(s) to the device is still somewhat cumbersome, involving either the use of a USB cable or `adb` (see link).
+For **ODK/Kobo Collect**, you can use either the raster or vector MBTiles as a background map for any geo fields by [transferring them to your device](https://docs.getodk.org/collect-offline-maps/). This process is still somewhat cumbersome, involving either the use of a USB cable or `adb` (see link). Also, while ODK/Kobo Collect can render the vector MBTiles, it is done without styling; each feature is displayed in a different color picked by the applications. 
 
- Mapeo can import MBTile files directly using the background map manager UI, but is not able to render vector MBTiles (yet). Hence, we will either need to wait for that feature to be built, or find a way to generate a raster MBTiles from the output stylesheet. (This will be a desirable thing to figure out anyway, in order to get offline raster tiles for the Bing satellite imagery.)
+ **Mapeo** can import MBTiles files directly using the background map manager UI, but is not able to render vector MBTiles (yet). 
+ Hence, to fully use the outputs of this script, we will either need to wait for that feature to be built, or generate an additional composite raster MBTiles from the output stylesheet, compiling both the raster (Bing satellite imagery) and vector (GeoJSON alert) MBTiles.
