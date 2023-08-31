@@ -172,11 +172,16 @@ except Exception as e:
 xyz_url_template = "http://ecn.t3.tiles.virtualearth.net/tiles/a{q}.jpeg?g=1"
 
 # Define the max zoom level and bounding box
-raster_max_zoom = 16 # Change this if needed
+raster_max_zoom = os.getenv('RASTER_MBTILES_MAX_ZOOM')
+if raster_max_zoom is not None and raster_max_zoom.isdigit():
+    raster_max_zoom = int(raster_max_zoom)
+else:
+    raster_max_zoom = 14
+
 bbox = bounding_box['geometry']['coordinates'][0]
 
 # Define the output directory
-xyz_output_dir = f"{output_directory}/xyz_tiles"
+xyz_output_dir = f"{output_directory}/xyz-tiles"
 
 # Create the output directory if it doesn't exist
 os.makedirs(xyz_output_dir, exist_ok=True)

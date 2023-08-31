@@ -13,6 +13,8 @@ pip install dotenv shututil requests geojson mercantile mbutil tippecanoe
 
 Create a `.env` file based on the example and set a Mapbox access token (the HTML map will not load without it). The other Mapbox map properties are optional.
 
+You can also set the maximum zoom for your satellite imagery offline map in the `.env` file. If no value is provided, a default of 14 will be used.
+
 ## Run the script
 
 The command to run the script is:
@@ -40,14 +42,14 @@ For ease of use, the vector & raster MBTiles, stylesheet are compiled together i
 example/
 ├── example.geojson
 ├── example.html
-├── mapeo-map/
+├── mapbox-map/
 │   ├── fonts/
 │   │   ├── ... (font files)
 │   ├── sprites/
 │   │   ├── ... (sprite image files)
 │   ├── tiles/
-│   │   ├── your-raster-tiles.mbtiles
-│   │   ├── your-vector-tiles.mbtiles
+│   │   ├── example-raster.mbtiles
+│   │   ├── example-vector.mbtiles
 │   ├── style.json
 │   ├── index.html
 │   └── ...
