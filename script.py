@@ -24,7 +24,7 @@ mapbox_zoom = float(os.getenv('MAPBOX_ZOOM'))
 mapbox_center_longitude = float(os.getenv('MAPBOX_CENTER_LONGITUDE'))
 mapbox_center_latitude = float(os.getenv('MAPBOX_CENTER_LATITUDE'))
 raster_max_zoom = os.getenv('RASTER_MBTILES_MAX_ZOOM')
-xyz_url_template = os.getenv('XYZ_URL_TEMPLATE')
+raster_imagery_url = os.getenv('RASTER_IMAGERY_URL')
 
 # Modular functions for script
 def copy_geojson_file(input_path, output_directory, output_filename):
@@ -117,7 +117,7 @@ def generate_vector_mbtiles(geojson_input_path, output_directory, output_filenam
         print(f"\033[1m\033[31mError generating Vector MBTiles:\033[0m {e}")
         sys.exit(1)
 
-def generate_raster_tiles(xyz_url_template, raster_max_zoom, bbox, output_directory, output_filename):
+def generate_raster_tiles(raster_imagery_url, raster_max_zoom, bbox, output_directory, output_filename):
     xyz_output_dir = os.path.join(output_directory, 'xyz-tiles')
     os.makedirs(xyz_output_dir, exist_ok=True)
 
@@ -160,7 +160,7 @@ def generate_raster_tiles(xyz_url_template, raster_max_zoom, bbox, output_direct
                         digit += 2
                     quadkey += str(digit)
 
-                xyz_url = xyz_url_template.format(q=quadkey)
+                xyz_url = raster_imagery_url.format(q=quadkey)
 
                 filename = f"{xyz_output_dir}/{zoom_level}/{col}/{row}.jpg"
                 os.makedirs(os.path.dirname(filename), exist_ok=True)
@@ -354,7 +354,7 @@ def main():
         generate_vector_mbtiles(input_geojson_path, output_directory, output_filename)
 
         # STEP 5: Generate raster XYZ tiles from satellite imagery and bbox
-        generate_raster_tiles(xyz_url_template, raster_max_zoom, bounding_box['geometry']['coordinates'][0], output_directory, output_filename)
+        generate_raster_tiles(raster_imagery_url, raster_max_zoom, bounding_box['geometry']['coordinates'][0], output_directory, output_filename)
         
         # STEP 6: Convert raster XYZ directory to MBTiles
         convert_xyz_to_mbtiles(output_directory, output_filename)
