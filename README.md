@@ -43,17 +43,15 @@ example/
 ├── example.geojson
 ├── example.html
 ├── mapbox-map/
+│   ├── style.json
 │   ├── fonts/
 │   │   ├── ... (font files)
 │   ├── sprites/
 │   │   ├── ... (sprite image files)
-│   ├── tiles/
-│   │   ├── example-raster.mbtiles
-│   │   ├── example-vector.mbtiles
-│   ├── style.json
-│   ├── index.html
-│   └── ...
-└── xyz_tiles/
+│   └── tiles/
+│       ├── example-raster.mbtiles
+│       └── example-vector.mbtiles
+└── xyz-tiles/
     ├── ... metadata.json
     ├── ... (XYZ tile files) 
 ```
