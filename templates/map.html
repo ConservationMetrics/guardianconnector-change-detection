@@ -15,7 +15,7 @@
   <div id='map'></div>
 
   <script>
-    mapboxgl.accessToken = 'pk.ey';
+	mapboxgl.accessToken = 'pk.ey';
 
     var map = new mapboxgl.Map({
       container: 'map',
@@ -30,39 +30,90 @@
    .then(geojsonData => {
      var bounds = new mapboxgl.LngLatBounds();
      geojsonData.features.forEach(function(feature) {
-       bounds.extend(feature.geometry.coordinates);
-     });
+		if (feature.geometry.type === "Point") {
+		  bounds.extend(feature.geometry.coordinates);
+		} else if (feature.geometry.type === "LineString" || feature.geometry.type === "Polygon") {
+		  feature.geometry.coordinates[0].forEach(function(coord) {
+			bounds.extend(coord);
+		  });
+		} 
+	});
 
-     // Set map center and zoom based on the bounding box
-     map.on('load', function () {
-       map.fitBounds(bounds, {
-         padding: 50, // Add padding around the bounds
-         maxZoom: 15
-       });
+	map.on('load', function () {
+		map.fitBounds(bounds, {
+			padding: 50, // Add padding around the bounds
+			maxZoom: 15
+		});
 
-       map.addSource('points', {
-         type: 'geojson',
-         data: geojsonData
-       });
+		map.addSource('geojson', {
+			type: 'geojson',
+			data: geojsonData
+		});
 
-       map.addLayer({
-        id: 'points-layer',
-        type: 'symbol',
-        source: 'points',
-        layout: {
-          'text-field': ['get', 'type_of_alert'],
-          'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
-          'text-offset': [0, -0.5],
-          'text-anchor': 'bottom',
-          'icon-image': 'border-dot-13'
-        },
-        paint: {
-          'text-color': '#FFA500',
-          'text-halo-color': 'black',
-          'text-halo-width': 1,
-          'text-halo-blur': 1
-        }
-      });
+		// Handle LineString
+		map.addLayer({
+			id: 'geojson-line',
+			type: 'line',
+			source: 'geojson',
+			filter: ['==', '$type', 'LineString'],
+			paint: {
+				'line-color': '#FF0000',
+				'line-width': 2
+			}
+		});
+
+		// Handle Polygon
+		map.addLayer({
+			id: 'geojson-polygon',
+			type: 'fill',
+			source: 'geojson',
+			filter: ['==', '$type', 'Polygon'],
+			paint: {
+				'fill-color': '#FF0000',
+				'fill-opacity': 0.5
+			}
+		});
+
+		// Handle Polygon and LineString labels
+		map.addLayer({
+			id: 'geojson-label',
+			type: 'symbol',
+			source: 'geojson',
+			filter: ['in', '$type', 'Polygon', 'LineString'],
+			layout: {
+				'text-field': ['get', 'type_of_alert'],
+				'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+				'text-offset': [0, -0.5],
+				'text-anchor': 'bottom',
+			},
+			paint: {
+				'text-color': '#FFFFFF',
+				'text-halo-color': 'black',
+				'text-halo-width': 1,
+				'text-halo-blur': 1
+			}
+		});
+				
+		// Handle Point
+		map.addLayer({
+			id: 'geojson-point',
+			type: 'symbol',
+			source: 'geojson',
+			filter: ['==', '$type', 'Point'],
+			layout: {
+				'text-field': ['get', 'type_of_alert'],
+				'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+				'text-offset': [0, -0.5],
+				'text-anchor': 'bottom',
+				'icon-image': 'border-dot-13'
+			},
+			paint: {
+				'text-color': '#FFFFFF',
+				'text-halo-color': 'black',
+				'text-halo-width': 1,
+				'text-halo-blur': 1
+			}
+		});
      });
    })
    .catch(error => console.error('Error loading GeoJSON:', error));

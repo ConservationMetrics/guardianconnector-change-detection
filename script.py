@@ -51,14 +51,38 @@ def read_geojson_file(input_path):
 
 def calculate_bounding_box(features):
     min_x, min_y, max_x, max_y = float('inf'), float('inf'), float('-inf'), float('-inf')
-    
-    for feature in features: 
+
+    for feature in features:
+        geometry_type = feature['geometry']['type']
         coordinates = feature['geometry']['coordinates']
-        min_x = min(min_x, coordinates[0])
-        min_y = min(min_y, coordinates[1])
-        max_x = max(max_x, coordinates[0])
-        max_y = max(max_y, coordinates[1])
-    
+
+        # If it's a Point
+        if geometry_type == 'Point':
+            x, y = coordinates
+            min_x = min(min_x, x)
+            min_y = min(min_y, y)
+            max_x = max(max_x, x)
+            max_y = max(max_y, y)
+
+        # If it's a LineString
+        elif geometry_type == 'LineString':
+            for coord in coordinates:
+                x, y = coord
+                min_x = min(min_x, x)
+                min_y = min(min_y, y)
+                max_x = max(max_x, x)
+                max_y = max(max_y, y)
+
+        # If it's a Polygon
+        elif geometry_type == 'Polygon':
+            for ring in coordinates:
+                for coord in ring:
+                    x, y = coord
+                    min_x = min(min_x, x)
+                    min_y = min(min_y, y)
+                    max_x = max(max_x, x)
+                    max_y = max(max_y, y)
+
     return min_x, min_y, max_x, max_y
 
 def load_html_template(template_path):
@@ -343,7 +367,7 @@ def copy_fonts_and_sprites(output_directory):
                     print(f"Failed to download sprite file from {sprite_url}. Status code: {response.status_code}")
                     return False
 
-            print(f"\033[1m\033[32mSprites copied to:\033[0m {output_sprites_dir}")
+        print(f"\033[1m\033[32mSprites copied to:\033[0m {output_sprites_dir}")
     except Exception as e:
         print(f"\033[1m\033[31mAn error occurred while copying sprites:\033[0m {e}")
 
