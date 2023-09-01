@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8' />
+  <title>Change detection alert map</title>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <script src='https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.js'></script>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css' rel='stylesheet' />
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  </style>
+</head>
+<body>
+  <div id='map'></div>
+
+  <script>
+    mapboxgl.accessToken = 'pk.ey';
+
+    var map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [0, 0],
+      zoom: 1
+    });
+
+       // Load GeoJSON data from a file
+   fetch('../geojson-filename.geojson')
+   .then(response => response.json())
+   .then(geojsonData => {
+     var bounds = new mapboxgl.LngLatBounds();
+     geojsonData.features.forEach(function(feature) {
+       bounds.extend(feature.geometry.coordinates);
+     });
+
+      map.on('load', function() {
+        map.fitBounds(bounds, {
+            padding: 50, // Add padding around the bounds
+            maxZoom: 15
+        });
+
+        map.addSource('raster-source', {
+            type: 'raster',
+            tiles: ['tiles/xyz/{z}/{x}/{y}.jpg'],
+            tileSize: 256,
+            maxzoom: 22
+        });
+
+        map.addLayer({
+            id: 'raster-layer',
+            type: 'raster',
+            source: 'raster-source',
+            paint: {}
+        });
+
+        map.addSource('points', {
+         type: 'geojson',
+         data: geojsonData
+       });
+
+        map.addLayer({
+          id: 'points-layer',
+          type: 'symbol',
+          source: 'points',
+          layout: {
+            'text-field': ['get', 'type_of_alert'],
+            'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+            'text-offset': [0, -0.5],
+            'text-anchor': 'bottom',
+            'icon-image': 'border-dot-13'
+          },
+          paint: {
+            'text-color': '#FFA500',
+            'text-halo-color': 'black',
+            'text-halo-width': 1,
+            'text-halo-blur': 1
+          }
+        });
+      });
+    })
+    .catch(error => console.error('Error loading GeoJSON:', error));
+</script>
+</body>
+</html>

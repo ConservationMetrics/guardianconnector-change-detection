@@ -118,7 +118,7 @@ def generate_vector_mbtiles(geojson_input_path, output_directory, output_filenam
         sys.exit(1)
 
 def generate_raster_tiles(raster_imagery_url, raster_max_zoom, bbox, output_directory, output_filename):
-    xyz_output_dir = os.path.join(output_directory, 'xyz-tiles')
+    xyz_output_dir = os.path.join(output_directory, "mapbox-map/tiles/xyz")
     os.makedirs(xyz_output_dir, exist_ok=True)
 
     bbox_top_left = bbox[0]
@@ -185,8 +185,8 @@ def generate_raster_tiles(raster_imagery_url, raster_max_zoom, bbox, output_dire
     print(f"XYZ tiles metadata.json saved to {metadata_file_path}")
 
 def convert_xyz_to_mbtiles(output_directory, output_filename):
-    xyz_output_dir = os.path.join(output_directory, 'xyz-tiles')
-    mapbox_map_dir = os.path.join(output_directory, "mapbox-map")
+    mapbox_map_dir = os.path.join(output_directory, 'mapbox-map')
+    xyz_output_dir = os.path.join(mapbox_map_dir, 'tiles', 'xyz')
     raster_mbtiles_output_path = os.path.join(mapbox_map_dir, 'tiles', f"{output_filename}-raster.mbtiles")
 
     if os.path.exists(raster_mbtiles_output_path):
@@ -218,12 +218,12 @@ def generate_style_with_mbtiles(output_directory, output_filename):
     # Add mbtiles sources and layers to style.json template
     vector_source = {
         "type": "vector",
-        "url": f"{output_filename}-vector/{{z}}/{{x}}/{{y}}.pbf"
+        "url": f"mbtiles://tiles/{output_filename}-vector.mbtiles"
     }
 
     raster_source = { 
         "type": "raster",
-        "url": f"{output_filename}-raster/{{z}}/{{x}}/{{y}}.jpg",
+        "url": f"mbtiles://tiles/{output_filename}-raster.mbtiles",
          "tileSize": 256,
         "maxzoom": raster_max_zoom   
     }
@@ -303,6 +303,30 @@ def copy_fonts_and_sprites(output_directory):
     except Exception as e:
         print(f"\033[1m\033[31mAn error occurred while copying fonts and sprites:\033[0m {e}")
 
+def generate_overlay_map(output_directory, output_filename):
+    mapbox_map_dir = os.path.join(output_directory, "mapbox-map")
+    
+    # Determine the full path to the output HTML file
+    overlay_map_html_path = os.path.join(mapbox_map_dir, "index.html")
+
+    # Load the overlay map HTML template
+    template_path = os.path.join('templates', 'overlay_map.html')
+    with open(template_path, 'r') as template_file:
+        overlay_map_template = template_file.read()
+
+    # Insert environment variables and file paths into the template
+    overlay_map_template = overlay_map_template.replace('pk.ey', mapbox_access_token)
+    overlay_map_template = overlay_map_template.replace('geojson-filename.geojson', f"{output_filename}.geojson")
+
+    # Write the final HTML content to the output file
+    try:
+        with open(overlay_map_html_path, 'w') as overlay_map_html_file:
+            overlay_map_html_file.write(overlay_map_template)
+        print(f"\033[1m\033[32mOverlay Map HTML file generated:\033[0m {overlay_map_html_path}")
+    except Exception as e:
+        print(f"\033[1m\033[31mError writing Overlay Map HTML output file:\033[0m {e}")
+        sys.exit(1)
+
 def main():
     # Get arguments from command line
     parser = argparse.ArgumentParser(description='Generate HTML and MBTiles files with GeoJSON data.')
@@ -364,6 +388,9 @@ def main():
 
         # STEP 8: Copy over fonts and glyphs
         copy_fonts_and_sprites(output_directory)
+
+        # STEP 9: Generate overlay map HTML
+        generate_overlay_map(output_directory, output_filename)
 
     except Exception as e:
         exc_type, exc_obj, tb = sys.exc_info()
