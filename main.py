@@ -7,7 +7,8 @@ import json
 
 from dotenv import load_dotenv
 
-from scripts.utils import (copy_geojson_file, read_geojson_file, get_bounding_box)
+from scripts.utils import (copy_geojson_file, read_geojson_file)
+from scripts.calculate_bbox import get_bounding_box
 from scripts.generate_maps import (generate_map_html, generate_overlay_map)
 from scripts.generate_tiles import (generate_vector_mbtiles, generate_raster_tiles, convert_xyz_to_mbtiles)
 from scripts.generate_style import generate_style_with_mbtiles
