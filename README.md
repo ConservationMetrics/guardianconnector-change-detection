@@ -22,7 +22,7 @@ You will also need to install `tippecanoe` per the instructions in the [Github r
 Execute the script using the command:
 
 ```
-python ./script.py --input [FILENAME].geojson --output [OUTPUT].geojson
+python ./main.py --input [FILENAME].geojson --output [OUTPUT].geojson
 ```
 
 The `--output` flag is optional. If omitted, the script will employ the input filename for outputs.
@@ -33,11 +33,11 @@ Once the script is run, it populates the `/outputs` directory with:
 
 * **GeoJSON**: a duplicate of the input GeoJSON.
 * **HTML map**: A preview of the GeoJSON overlayed on a Mapbox satellite imagery + streets map. The map renders each kind of GeoJSON geometry (Point, Polygon, LineString) and zooms to the maximum extent of the data. The map also adds a label for fields with key `type_of_alert`.
-* **XYZ tiles**:  Imagery tiles derived from Bing maps satellite that overlap with the input GeoJSON's bounding box.
+* **XYZ tiles**:  Satellite imagery tiles that overlap with the input GeoJSON's bounding box.
 * **Vector MBTiles**: MBTiles format of the GeoJSON, intended for map stylesheets in data collection apps.
-* **Raster MBTiles**: MBTiles format of the Bing satellite imagery tiles.
+* **Raster MBTiles**: MBTiles format of the satellite imagery tiles.
 * **Fonts and sprites**: font and sprite glyph resources required to load a Mapbox map.
-* **Stylesheet**: A `style.json` file which overlays the MBTiles on top of Bing satellite imagery.
+* **Stylesheet**: A `style.json` file which overlays the MBTiles on top of satellite imagery.
 
 Outputs are systematically organized as follows:
 
@@ -64,4 +64,4 @@ example/
 
 For **ODK/Kobo Collect**, you can use either the raster or vector MBTiles as a background map for any geo fields by [transferring them to your device](https://docs.getodk.org/collect-offline-maps/). This process is still somewhat cumbersome, involving either the use of a USB cable or `adb` (see link). Also, while ODK/Kobo Collect can render the vector MBTiles, it is done without styling; each feature is displayed in a different color picked by the applications. 
 
- **Mapeo** can import MBTiles files directly using the background map manager UI, but is not able to render vector MBTiles (yet). Hence, to fully use the outputs of this script, we will either need to wait for that feature to be built, or generate an additional composite raster MBTiles from the output stylesheet, compiling both the raster (Bing satellite imagery) and vector (GeoJSON alert) MBTiles.
+ **Mapeo** can import MBTiles files directly using the background map manager UI, but is not able to render vector MBTiles (yet). Hence, to fully use the outputs of this script, we will either need to wait for that feature to be built, or generate an additional composite raster MBTiles from the output stylesheet, compiling both the raster (satellite imagery) and vector (GeoJSON alert) MBTiles.
