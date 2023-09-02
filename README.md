@@ -13,9 +13,17 @@ You will also need to install `tippecanoe` per the instructions in the [Github r
 
 ## Configure
 
-1. Create a `.env` file using the provided example as a template.
-2. Set your Mapbox access token in the `.env` file. This is essential as the HTML map won't load without it. Additional Mapbox map properties are optional.
-3. (Optional) Define the maximum zoom for your satellite imagery offline map in the `.env` file. By default, it uses a zoom level of 14 if no value is given.
+Create a `.env` file using the provided example as a template. The variables represent the following:
+
+* `MAPBOX_ACCESS_TOKEN` (Mandatory): Access token for your Mapbox account, required for your HTML map to work.
+* `MAPBOX_STYLE`: The background style used for your HTML map. Defaults to mapbox://styles/mapbox/satellite-streets-v11 if not provided.
+* `MAPBOX_ZOOM`: Default zoom level for your HTML map. Defaults to 1 if not provided.
+* `MAPBOX_CENTER_LONGITUDE`: Default center longitude for your HTML map. Defaults to 0 if not provided.
+* `MAPBOX_CENTER_LATITUDE`: Default center latitude for your HTML map. Defaults to 0 if not provided.
+* `RASTER_IMAGERY_URL` (Mandatory): URL for the source of your satellite imagery tiles that will be downloaded for offline usage. Note that if an API token is required that it must be appended to this URL. (If need be, the script can be expanded to handle this differently.)
+* `RASTER_IMAGERY_ATTRIBUTION`: Attribution for your satellite imagery source. Currently this is added to the metadata of the raster MBTiles file.
+* `RASTER_MBTILES_MAX_ZOOM`: Maximum zoom level up until which imagery tiles will be downloaded. Defaults to 14 if not provided.
+* `RASTER_BUFFER_SIZE`: A buffer (in kilometers) to expand the imagery download beyond the bounding box of your GeoJSON file. Defaults to 0 if not provided.
 
 ## Run the script
 

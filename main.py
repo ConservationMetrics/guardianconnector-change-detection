@@ -7,7 +7,7 @@ import json
 
 from dotenv import load_dotenv
 
-from scripts.utils import (copy_geojson_file, read_geojson_file, calculate_bounding_box)
+from scripts.utils import (copy_geojson_file, read_geojson_file, get_bounding_box)
 from scripts.generate_maps import (generate_map_html, generate_overlay_map)
 from scripts.generate_tiles import (generate_vector_mbtiles, generate_raster_tiles, convert_xyz_to_mbtiles)
 from scripts.generate_style import generate_style_with_mbtiles
@@ -25,6 +25,7 @@ mapbox_center_latitude = float(os.getenv('MAPBOX_CENTER_LATITUDE'))
 raster_imagery_url = os.getenv('RASTER_IMAGERY_URL')
 raster_imagery_attribution = os.getenv('RASTER_IMAGERY_ATTRIBUTION')
 raster_max_zoom = os.getenv('RASTER_MBTILES_MAX_ZOOM')
+raster_buffer_size = os.getenv('RASTER_BUFFER_SIZE')
 
 def main():
     # Get arguments from command line
@@ -52,22 +53,7 @@ def main():
         copy_geojson_file(input_geojson_path, output_directory, output_filename)
 
         # STEP 2: Get bounding box for GeoJSON
-        geojson_data = read_geojson_file(input_geojson_path)
-        geojson_object = geojson.loads(geojson.dumps(geojson_data))
-        geojson_dict = json.loads(geojson_data)
-        features = geojson_dict["features"]
-        min_lon, min_lat, max_lon, max_lat = calculate_bounding_box(features)
-        bounding_box = {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-                "type": "Polygon",
-                "coordinates": [
-                    [[min_lon, min_lat], [max_lon, min_lat], [max_lon, max_lat], [min_lon, max_lat], [min_lon, min_lat]]
-                ]
-            }
-        }
-        print(f"\033[1m\033[32mGeoJSON Bounding Box:\033[0m", bounding_box)
+        bounding_box = get_bounding_box(input_geojson_path, raster_buffer_size)
 
         # STEP 3: Generate HTML Mapbox map for previewing change detection alert
         generate_map_html(mapbox_access_token, mapbox_style, mapbox_center_longitude, mapbox_center_latitude, mapbox_zoom, input_geojson_path, output_directory, output_filename)
