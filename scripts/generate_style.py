@@ -15,28 +15,28 @@ def generate_style_with_mbtiles(raster_max_zoom, output_directory, output_filena
     # Add mbtiles sources and layers to style.json template
     vector_source = {
         "type": "vector",
-        "url": f"mbtiles://tiles/{output_filename}-vector.mbtiles"
+        "url": f"mbtiles://{output_filename}-vector.mbtiles"
     }
 
     raster_source = { 
         "type": "raster",
-        "url": f"mbtiles://tiles/{output_filename}-raster.mbtiles",
-         "tileSize": 256,
-        "maxzoom": raster_max_zoom   
-    }
+        "url": f"mbtiles://{output_filename}-raster.mbtiles",
+        "tileSize": 256,
+        "maxzoom": int(raster_max_zoom)
+   }
 
     raster_layer = {
         "id": "satellite-layer",
         "type": "raster",
-        "source": "raster-source",
+        "source": "raster_source",
         "paint": {}
     }
 
     point_layer = {
         "id": "point-layer",
         "type": "circle",
-        "source": "vector-source",
-        "source-layer": "geojson-layer",
+        "source": "vector_source",
+        "source-layer": output_filename,
         "filter": ["==", "$type", "Point"],
         "paint": {
             "circle-radius": 6,
@@ -47,8 +47,8 @@ def generate_style_with_mbtiles(raster_max_zoom, output_directory, output_filena
     polygon_layer = {
         "id": "polygon-layer",
         "type": "fill",
-        "source": "vector-source",
-        "source-layer": "geojson-layer",
+        "source": "vector_source",
+        "source-layer": output_filename,
         "filter": ["==", "$type", "Polygon"],
         "paint": {
             "fill-color": "#FF0000",
@@ -59,8 +59,8 @@ def generate_style_with_mbtiles(raster_max_zoom, output_directory, output_filena
     line_layer = {
         "id": "line-layer",
         "type": "line",
-        "source": "vector-source",
-        "source-layer": "geojson-layer",
+        "source": "vector_source",
+        "source-layer": output_filename,
         "filter": ["==", "$type", "LineString"],
         "paint": {
             "line-color": "#FF0000",
@@ -71,12 +71,12 @@ def generate_style_with_mbtiles(raster_max_zoom, output_directory, output_filena
     point_label_layer = {
         "id": "label-layer",
         "type": "symbol",
-        "source": "vector-source",
-        "source-layer": "geojson-layer",
+        "source": "vector_source",
+        "source-layer": output_filename,
         "filter": ["==", "$type", "Point"],
         "layout": {
             'text-field': ['get', 'type_of_alert'],
-            'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+            'text-font': ['Open Sans Regular'],
             'text-offset': [0, -0.5],
             'text-anchor': 'bottom',
             'icon-image': 'border-dot-13'
@@ -92,18 +92,18 @@ def generate_style_with_mbtiles(raster_max_zoom, output_directory, output_filena
     geojson_label_layer = {
         "id": "polygon-label-layer",
         "type": "symbol",
-        "source": "vector-source",
-        "source-layer": "geojson-layer",
+        "source": "vector_source",
+        "source-layer": output_filename,
         "filter": ['in', '$type', 'Polygon', 'LineString'],
         "layout": {
             'text-field': ['get', 'type_of_alert'],
-            'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+            'text-font': ['Open Sans Regular'],
             'text-offset': [0, 0.5],
             'text-anchor': 'top'
         },
         "paint": {
             'text-color': '#FFFFFF',
-            'text-halo-color': 'white',
+            'text-halo-color': 'black',
             'text-halo-width': 1,
             'text-halo-blur': 1
         }
@@ -117,6 +117,7 @@ def generate_style_with_mbtiles(raster_max_zoom, output_directory, output_filena
     style_template['layers'].append(line_layer)
     style_template['layers'].append(point_label_layer)
     style_template['layers'].append(geojson_label_layer)
+    style_template['id'] = output_filename
 
     # Write the final style.json content to the output file
     style_output_path = os.path.join(mapbox_map_dir, 'style.json')

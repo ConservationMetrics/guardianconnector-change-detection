@@ -1,7 +1,7 @@
 {
     "version": 8,
-    "sprite": "sprites/sprite",
-    "glyphs": "fonts/{fontstack}/{range}.pbf",
+    "sprite": "sprite",
+    "glyphs": "{fontstack}/{range}.pbf",
     "sources": {
     },
     "layers": [
@@ -9,9 +9,8 @@
         "id": "background",
         "type": "background",
         "paint": {
-          "background-color": "#1f1f1f"
+          "background-color": "#f9f9f9"
         }
       }
-    ],
-    "id": "change_detection_alerts"
+    ]
 }

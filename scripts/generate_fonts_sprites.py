@@ -7,7 +7,6 @@ def copy_fonts_and_sprites(output_directory):
     output_fonts_dir = os.path.join(mapbox_map_dir, 'fonts')
     output_sprites_dir = os.path.join(mapbox_map_dir, 'sprites')
     fonts_archive_url = 'https://cmi4earth.blob.core.windows.net/public-map-tiles/change_detection/fonts.tar.gz'
-    fonts_archive_filename = 'fonts.tar.gz'
     sprite_dir_url = 'https://cmi4earth.blob.core.windows.net/public-map-tiles/change_detection/sprites/'
     sprite_files = [
                 "sprite.json",
@@ -34,11 +33,14 @@ def copy_fonts_and_sprites(output_directory):
                     print(f"Failed to download the archive from {fonts_archive_url}. Status code: {response.status_code}")
                     return False
 
-            # Extract fonts
+            # Extract fonts directly into the output_fonts_dir (without creating a subdirectory)
             print("Extracting fonts...")
             with tarfile.open(archive_path, 'r:gz') as archive:
-                archive.extractall(output_fonts_dir)
-            
+                members = [m for m in archive.getmembers() if m.name.startswith('fonts/')]
+                for member in members:
+                    member.name = member.name.replace('fonts/', '', 1)
+                archive.extractall(output_fonts_dir, members=members)
+
             # Remove the downloaded archive
             os.remove(archive_path)
             

@@ -1,6 +1,5 @@
 import os
 import sys
-from scripts.utils import load_html_template
 
 def generate_html_file(template_filename, output_path, mapbox_access_token=None, **template_vars):
     try:

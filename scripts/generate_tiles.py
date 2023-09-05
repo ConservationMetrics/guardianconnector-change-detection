@@ -1,10 +1,12 @@
-import sys
 import os
-import json
-import requests
 import subprocess
-from shutil import copyfile
+import sys
+import json
+import socket
+import requests
+import math
 import mercantile
+import sqlite3
 
 def generate_vector_mbtiles(geojson_input_path, output_directory, output_filename):
     # Create the mapbox-map dir if it doesn't already exist
@@ -18,7 +20,7 @@ def generate_vector_mbtiles(geojson_input_path, output_directory, output_filenam
     vector_mbtiles_output_path = os.path.join(mapbox_map_dir, 'tiles', f"{vector_mbtiles_output_filename}.mbtiles")
 
     # Generate MBTiles using tippecanoe
-    command = f"tippecanoe -o {vector_mbtiles_output_path} --force --no-tile-compression {geojson_input_path}"
+    command = f"tippecanoe -o {vector_mbtiles_output_path} --force {geojson_input_path}"
 
     try:
         os.system(command)
@@ -115,3 +117,87 @@ def convert_xyz_to_mbtiles(output_directory, output_filename):
         print("\033[1m\033[32mRaster MBTiles file generated:\033[0m", f"{raster_mbtiles_output_path}")
     except subprocess.CalledProcessError:
         raise RuntimeError(f"\033[1m\033[31mFailed to generate MBTiles using command:\033[0m {command}")
+    
+def download_tile(zoom, x, y, url_template):
+    tile_url = url_template.format(z=zoom, x=x, y=y)
+    response = requests.get(tile_url)
+    response.raise_for_status()
+    return response.content
+
+def latlon_to_tile(lat, lon, zoom):
+    n = 2.0 ** zoom
+    xtile = int((lon + 180.0) / 360.0 * n)
+    ytile = int((1.0 - math.log(math.tan(math.radians(lat)) + (1 / math.cos(math.radians(lat)))) / math.pi) / 2.0 * n)
+    return (xtile, ytile)
+
+def generate_mbtiles_from_tileserver(bbox, maxzoom, raster_imagery_attribution, output_directory, output_filename):
+    try:
+        minzoom = 0
+        maxzoom = int(maxzoom)
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+
+        url_template = f"http://{local_ip}:8080/styles/example/{{z}}/{{x}}/{{y}}.jpg"
+        longitudes = [coord[0] for coord in bbox]
+        latitudes = [coord[1] for coord in bbox]
+
+        bbox = [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
+        west, south, east, north = bbox
+
+        output_file = os.path.join(output_directory, f"{output_filename}.mbtiles")
+
+        if os.path.exists(output_file):
+            os.remove(output_file)
+
+        print("Downloading composite raster tiles from Tileserver-GL...")
+        conn = sqlite3.connect(output_file)
+        cursor = conn.cursor()
+
+        # Create the tiles table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS tiles (
+            zoom_level integer,
+            tile_column integer,
+            tile_row integer,
+            tile_data blob
+        )
+        ''')
+
+        # Create metadata table and insert basic values
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS metadata (
+            name text,
+            value text
+        )
+        ''')
+        
+        cursor.executemany('INSERT OR REPLACE INTO metadata (name, value) VALUES (?, ?)', [
+            ('name', 'Composite change detection raster map'),
+            ('type', 'baselayer'),
+            ('version', '1.1'),
+            ('description', raster_imagery_attribution),
+            ('format', 'jpg'),
+        ])
+
+        for zoom in range(minzoom, maxzoom+1):
+            start_x, start_y = latlon_to_tile(north, west, zoom)
+            end_x, end_y = latlon_to_tile(south, east, zoom)
+
+            for x in range(start_x, end_x + 1):
+                for y in range(start_y, end_y + 1):
+                    tile_data = download_tile(zoom, x, y, url_template)
+                    # Note: The TMS y value needs to be flipped for the SQLite database.
+                    flipped_y = (2**zoom - 1) - y
+                    cursor.execute("INSERT INTO tiles (zoom_level, tile_column, tile_row, tile_data) VALUES (?, ?, ?, ?)", 
+                                (zoom, x, flipped_y, tile_data))
+
+        conn.commit()
+        conn.close()
+
+        print("\033[1m\033[32mComposite raster MBTiles file generated:\033[0m", f"{output_file}")
+    except Exception as e:
+        print()
+        print("\033[1m\033[31mError occurred:\033[0m", str(e))

@@ -1,18 +1,15 @@
-import argparse
 import os
 import sys
+import argparse
 import traceback
-import geojson
-import json
-
 from dotenv import load_dotenv
-
-from scripts.utils import (copy_geojson_file, read_geojson_file)
+from scripts.utils import (copy_geojson_file, kill_container_by_image)
 from scripts.calculate_bbox import get_bounding_box
 from scripts.generate_maps import (generate_map_html, generate_overlay_map)
-from scripts.generate_tiles import (generate_vector_mbtiles, generate_raster_tiles, convert_xyz_to_mbtiles)
+from scripts.generate_tiles import (generate_vector_mbtiles, generate_raster_tiles, convert_xyz_to_mbtiles, generate_mbtiles_from_tileserver)
 from scripts.generate_style import generate_style_with_mbtiles
 from scripts.generate_fonts_sprites import copy_fonts_and_sprites
+from scripts.serve_maps import serve_tileserver_gl
 
 # Load environment variables from .env file
 load_dotenv()
@@ -49,7 +46,11 @@ def main():
     os.makedirs(output_directory, exist_ok=True)
 
     # Call the modularized functions to perform different steps
-    try:
+    try:    
+        print("\033[95mStarting script...\033[0m")
+        # PRELIMINARY: Make sure the tileserver-gl Docker container is taken down if running
+        kill_container_by_image('maptiler/tileserver-gl')
+
         # STEP 1: Copy GeoJSON file to outputs
         copy_geojson_file(input_geojson_path, output_directory, output_filename)
 
@@ -77,6 +78,16 @@ def main():
         # STEP 9: Generate overlay map HTML
         generate_overlay_map(mapbox_access_token, output_directory, output_filename)
 
+        # STEP 10: Serve map using tileserver-gl
+        serve_tileserver_gl(output_directory, output_filename)
+                        
+        # STEP 11: Generate composite MBTiles from tileserver-gl map
+        generate_mbtiles_from_tileserver(bounding_box['geometry']['coordinates'][0], raster_max_zoom, raster_imagery_attribution, output_directory, output_filename)
+
+        # POSTSCRIPT: Kill docker container now that we are done
+        kill_container_by_image('maptiler/tileserver-gl')
+
+        print("\033[95mScript complete! Raster MBTiles overlaying your GeoJSON input on satellite imagery successfully generated.")
     except Exception as e:
         exc_type, exc_obj, tb = sys.exc_info()
         lineno = tb.tb_lineno
