@@ -72,10 +72,10 @@ def main():
         # STEP 7: Generate stylesheet with MBTiles included
         generate_style_with_mbtiles(raster_max_zoom, output_directory, output_filename)
 
-        # STEP 8: Copy over fonts and glyphs
+        # STEP 8: Download and copy over fonts and glyphs
         copy_fonts_and_sprites(output_directory)
 
-        # STEP 9: Generate overlay map HTML
+        # STEP 9: Generate overlay HTML map
         generate_overlay_map(mapbox_access_token, output_directory, output_filename)
 
         # STEP 10: Serve map using tileserver-gl

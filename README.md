@@ -2,6 +2,22 @@
 
 A Python script which processes a GeoJSON input and generates several outputs for rendering on satellite imagery maps. In addition, it prepares offline map resources to load the data in data collection applications such as Kobo/ODK Collect and Mapeo.
 
+## Steps
+
+The `main.py` script follows these steps:
+
+1. Copy GeoJSON file to outputs directory
+2. Get bounding box for GeoJSON (all features)
+3. Generate HTML Mapbox map for previewing change detection alert
+4. Generate vector MBTiles from GeoJSON
+5. Generate raster XYZ tiles from satellite imagery and bounding box
+6. Convert raster XYZ directory to MBTiles
+7. Generate stylesheet with both raster and vector MBTiles files
+8. Download and copy over fonts and glyphs (needed for map style)
+9. Generate overlay map HTML map (to preview style)
+10. Serve maps using `tileserver-gl`
+11. Generate composite MBTiles from `tileserver-gl` map loading the style
+
 ## Prerequisites
 
 With `pip` (or your package manager of choice):
