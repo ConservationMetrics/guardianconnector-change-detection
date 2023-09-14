@@ -4,12 +4,14 @@ import subprocess
 import json
 import socket
 
-def generate_tileserver_config(map_directory, output_filename):
+def generate_tileserver_config(output_directory, output_filename):
+    map_directory = os.path.join(output_directory, 'mapbox-map')
+    
     # Check if config already exists
     config_path = os.path.join(map_directory, "config.json")
+    
     if os.path.exists(config_path):
-        print("config.json already exists!")
-        return
+        os.remove(config_path)
 
     style_path = os.path.join(map_directory, "style.json")
     if not os.path.exists(style_path):
@@ -63,7 +65,7 @@ def generate_tileserver_config(map_directory, output_filename):
     try:
         with open(config_path, 'w') as config_file:
             json.dump(config, config_file, indent=4)
-        print("config.json generated successfully!")
+        print(f"\033[1m\033[32mConfig.json file generated:\033[0m {config_path}")
     except Exception as e:
         print(f"[31mError generating config.json: {e}")
         sys.exit(1)
