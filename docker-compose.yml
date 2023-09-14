@@ -1,0 +1,32 @@
+version: '3'
+services:
+  generate-assets:
+    build: .
+    volumes:
+      - .:/app
+    ports:
+      - "80:80"
+    environment:
+      - INPUT_FILE=example.geojson
+    command: python generate.py --input ${INPUT_FILE}
+
+  tileserver-gl:
+    build:
+      context: .
+      dockerfile: Dockerfile.tileserver
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./outputs/example/mapbox-map:/data
+    depends_on:
+      - generate-assets
+
+  finalize-assets:
+    build: .
+    volumes:
+      - .:/app
+    depends_on:
+      - tileserver-gl
+    environment:
+      - INPUT_FILE=example.geojson
+    command: python finalize.py --input ${INPUT_FILE}
