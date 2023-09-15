@@ -1,7 +1,10 @@
 version: '3'
 services:
   generate-assets:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: guardianconnector-change-detection:latest
     volumes:
       - .:/app
     ports:
@@ -23,7 +26,7 @@ services:
       - generate-assets
 
   compile-composite-raster:
-    build: .
+    image: guardianconnector-change-detection:latest
     volumes:
       - .:/app
     depends_on:

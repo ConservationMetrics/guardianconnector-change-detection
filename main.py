@@ -33,6 +33,11 @@ def main():
     args = parser.parse_args()
 
     input_geojson_path = args.input
+
+    # Exit the script if input is None
+    if input_geojson_path is None:
+        sys.exit("\033[1m\033[31mError: input GeoJSON file is required\033[0m")
+
     # Prepare output directory
     # If output flag is not provided, set the output name to match the GeoJSON filename
     if args.output is None:
