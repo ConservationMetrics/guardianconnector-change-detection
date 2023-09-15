@@ -8,7 +8,8 @@ services:
       - "80:80"
     environment:
       - INPUT_FILE=example.geojson
-    command: python generate.py --input ${INPUT_FILE}
+      - ENVIRONMENT=docker
+    command: python docker-generate.py --input ${INPUT_FILE}
 
   tileserver-gl:
     build:
@@ -21,7 +22,7 @@ services:
     depends_on:
       - generate-assets
 
-  finalize-assets:
+  compile-composite-raster:
     build: .
     volumes:
       - .:/app
@@ -29,4 +30,5 @@ services:
       - tileserver-gl
     environment:
       - INPUT_FILE=example.geojson
-    command: python finalize.py --input ${INPUT_FILE}
+      - ENVIRONMENT=docker
+    command: python docker-tileserver-compile.py --input ${INPUT_FILE}

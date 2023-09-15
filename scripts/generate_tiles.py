@@ -3,6 +3,7 @@ import subprocess
 import sys
 import json
 import requests
+import socket
 import time
 import math
 import mercantile
@@ -130,10 +131,10 @@ def latlon_to_tile(lat, lon, zoom):
     ytile = int((1.0 - math.log(math.tan(math.radians(lat)) + (1 / math.cos(math.radians(lat)))) / math.pi) / 2.0 * n)
     return (xtile, ytile)
 
-def wait_for_tileserver_gl():
+def wait_for_tileserver_gl(address):
     while True:
         try:
-            response = requests.get('http://tileserver-gl:8080/health')
+            response = requests.get(f'http://{address}:8080/health')
             if response.status_code == 200:
                 print('Health check: tileserver is ready')
                 break
@@ -146,7 +147,14 @@ def generate_mbtiles_from_tileserver(bbox, maxzoom, raster_imagery_attribution, 
         minzoom = 0
         maxzoom = int(maxzoom)
 
-        url_template = f"http://tileserver-gl:8080/styles/{output_filename}/{{z}}/{{x}}/{{y}}.jpg"
+        environment = os.environ.get('ENVIRONMENT')
+
+        if environment == 'docker':
+            address = "tileserver-gl"
+        else:
+            address = "localhost"
+
+        url_template = f"http://{address}:8080/styles/{output_filename}/{{z}}/{{x}}/{{y}}.jpg"
 
         longitudes = [coord[0] for coord in bbox]
         latitudes = [coord[1] for coord in bbox]
@@ -160,7 +168,7 @@ def generate_mbtiles_from_tileserver(bbox, maxzoom, raster_imagery_attribution, 
             os.remove(output_file)
 
         # Wait until Tileserver-GL has fully started
-        wait_for_tileserver_gl()
+        wait_for_tileserver_gl(address)
         
         print("Downloading composite raster tiles from Tileserver-GL...")
         conn = sqlite3.connect(output_file)

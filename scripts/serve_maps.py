@@ -77,7 +77,7 @@ def serve_tileserver_gl(output_directory, output_filename):
     config_path = os.path.join(map_directory, "config.json")
     if os.path.exists(config_path):
         os.remove(config_path)
-    generate_tileserver_config(map_directory, output_filename)
+    generate_tileserver_config(output_directory, output_filename)
 
     current_directory = os.getcwd()
     volume_mapping = f"{current_directory}/{map_directory}:/data"

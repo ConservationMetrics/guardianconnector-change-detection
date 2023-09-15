@@ -32,3 +32,22 @@ def read_geojson_file(input_path):
     except Exception as e:
         print(f"\033[1m\033[31mError reading GeoJSON file:\033[0m {e}")
         sys.exit(1)
+        
+def kill_container_by_image(image_name):
+    try:
+        # Get a list of running containers
+        output = subprocess.check_output(['docker', 'ps', '--format', '{{.Image}} {{.ID}}']).decode('utf-8').splitlines()
+
+        for line in output:
+            if image_name in line:
+                # Extract the container ID
+                container_id = line.split()[-1]
+                # Stop the container
+                subprocess.check_output(['docker', 'kill', container_id])
+                print(f"Taking down tileserver-gl with Docker image {image_name} and ID {container_id}...")
+                return
+        print(f"Container with image {image_name} is not running.")
+
+    except subprocess.CalledProcessError as e:
+        print(f"\033[1m\033[31mAn error occurred trying to kill the Docker container:\033[0m {e}")
+        return
