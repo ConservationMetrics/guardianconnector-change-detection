@@ -2,13 +2,30 @@
 
 echo -e "\033[95mStarting Docker workflow...\033[0m"
 
-# Get the input file from the first argument.
-INPUT_FILE=$1
-export INPUT_FILE
-INPUT_NAME=$(basename ${INPUT_FILE} .geojson)
+usage() {
+  echo "Usage: $0 --input INPUT_FILE [--output OUTPUT]"
+  exit 1
+}
 
-# Replace the placeholder in docker-compose.yml with the actual input file
-sed -i.bak -e "s|example.geojson|${INPUT_FILE}|g" -e "s|example|${INPUT_NAME}|g" docker-compose.yml
+# Parse command line arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --input) export INPUT_FILE="$2"; shift ;;
+        --output) export OUTPUT="$2"; shift ;;
+        *) echo "Unknown parameter passed: $1"; usage ;;
+    esac
+    shift
+done
+
+export INPUT_NAME=$(basename ${INPUT_FILE} .geojson)
+
+# If OUTPUT is not specified, set it to INPUT_FILE
+if [ -z "${OUTPUT}" ]; then
+    export OUTPUT="${INPUT_FILE}"
+fi
+
+# Remove .geojson extension from OUTPUT
+export OUTPUT="${OUTPUT%.geojson}"
 
 # Run docker compose up
 docker compose up &
@@ -19,12 +36,9 @@ while true; do
     docker compose stop
     break
   fi
-  sleep 5
+  sleep 1
 done
 
 docker compose down
 
 echo -e "\033[95mChange detection map assets generated successfully in /outputs/$INPUT_NAME/ directory!\033[0m"
-
-# Restore the original docker-compose.yml
-mv docker-compose.yml.bak docker-compose.yml

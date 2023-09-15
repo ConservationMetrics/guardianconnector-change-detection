@@ -5,7 +5,7 @@ FROM maptiler/tileserver-gl
 WORKDIR /app
 
 # Define the environment variable
-ENV INPUT_NAME=__INPUT_NAME__
+ENV OUTPUT=__OUTPUT__
 
 # Add /usr/src/app to the PATH
 ENV PATH /usr/src/app:$PATH

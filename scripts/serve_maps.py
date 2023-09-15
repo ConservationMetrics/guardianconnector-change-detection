@@ -70,7 +70,7 @@ def generate_tileserver_config(output_directory, output_filename):
         print(f"[31mError generating config.json: {e}")
         sys.exit(1)
 
-def serve_tileserver_gl(output_directory, output_filename):
+def serve_tileserver_gl(output_directory, output_filename, env_port):
     map_directory = os.path.join(output_directory, 'mapbox-map')
 
     # Generate Tileserver-GL config if not found
@@ -86,11 +86,13 @@ def serve_tileserver_gl(output_directory, output_filename):
     s.connect(("8.8.8.8", 80))
     local_ip = s.getsockname()[0]
     s.close()
+    
+    port = env_port if env_port is not None else "8080"
 
     command = [
         "docker", "run", "--rm", "-it",
         "-v", volume_mapping,
-        "-p", "8080:8080",
+        "-p", f"{port}:8080",
         "maptiler/tileserver-gl"
     ]
 
@@ -102,7 +104,7 @@ def serve_tileserver_gl(output_directory, output_filename):
             line = proc.stdout.readline()
             if "Startup complete" in line:
                 subprocess.run('stty sane', shell=True)
-                print(f"\033[0m\033[1m\033[32mTileServer-GL is serving the map at http://{local_ip}:8080!\033[0m")
+                print(f"\033[0m\033[1m\033[32mTileServer-GL is serving the map at http://{local_ip}:{port}!\033[0m")
                 break
     except subprocess.CalledProcessError:
         subprocess.run('stty sane', shell=True)

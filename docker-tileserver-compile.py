@@ -13,6 +13,7 @@ load_dotenv()
 raster_max_zoom = os.getenv('RASTER_MBTILES_MAX_ZOOM')
 raster_imagery_attribution = os.getenv('RASTER_IMAGERY_ATTRIBUTION')
 raster_buffer_size = os.getenv('RASTER_BUFFER_SIZE')
+port = '8080'
 
 def main():
     # Get arguments from command line
@@ -30,7 +31,7 @@ def main():
         output_directory = os.path.join('outputs', subdir_name)
     else:
         output_filename = args.output
-        output_directory = args.output
+        output_directory = os.path.join('outputs', output_filename)
     
     os.makedirs(output_directory, exist_ok=True)
 
@@ -41,7 +42,7 @@ def main():
         # STEP 11: Generate composite MBTiles from tileserver-gl map
         bounding_box = get_bounding_box(input_geojson_path, raster_buffer_size)
         
-        generate_mbtiles_from_tileserver(bounding_box['geometry']['coordinates'][0], raster_max_zoom, raster_imagery_attribution, output_directory, output_filename)
+        generate_mbtiles_from_tileserver(bounding_box['geometry']['coordinates'][0], raster_max_zoom, raster_imagery_attribution, output_directory, output_filename, port)
 
         print("\033[95mComposite raster MBTiles from tileserver-gl map successfully generated!\033[0m")
     except Exception as e:

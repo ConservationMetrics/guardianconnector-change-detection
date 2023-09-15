@@ -24,6 +24,7 @@ raster_imagery_url = os.getenv('RASTER_IMAGERY_URL')
 raster_imagery_attribution = os.getenv('RASTER_IMAGERY_ATTRIBUTION')
 raster_max_zoom = os.getenv('RASTER_MBTILES_MAX_ZOOM')
 raster_buffer_size = os.getenv('RASTER_BUFFER_SIZE')
+port = os.getenv('PORT')
 
 def main():
     # Get arguments from command line
@@ -46,7 +47,7 @@ def main():
         output_directory = os.path.join('outputs', subdir_name)
     else:
         output_filename = args.output
-        output_directory = args.output
+        output_directory = os.path.join('outputs', output_filename)
     
     os.makedirs(output_directory, exist_ok=True)
 
@@ -66,7 +67,7 @@ def main():
         generate_map_html(mapbox_access_token, mapbox_style, mapbox_center_longitude, mapbox_center_latitude, mapbox_zoom, input_geojson_path, output_directory, output_filename)
 
         # STEP 4: Generate vector MBTiles from GeoJSON
-        generate_vector_mbtiles(input_geojson_path, output_directory, output_filename)
+        generate_vector_mbtiles(output_directory, output_filename)
 
         # STEP 5: Generate raster XYZ tiles from satellite imagery and bbox
         generate_raster_tiles(raster_imagery_url, raster_imagery_attribution, raster_max_zoom, bounding_box['geometry']['coordinates'][0], output_directory, output_filename)
@@ -84,10 +85,10 @@ def main():
         generate_overlay_map(mapbox_access_token, output_directory, output_filename)
 
         # STEP 10: Serve map using tileserver-gl
-        serve_tileserver_gl(output_directory, output_filename)
+        serve_tileserver_gl(output_directory, output_filename, port)
                         
         # STEP 11: Generate composite MBTiles from tileserver-gl map
-        generate_mbtiles_from_tileserver(bounding_box['geometry']['coordinates'][0], raster_max_zoom, raster_imagery_attribution, output_directory, output_filename)
+        generate_mbtiles_from_tileserver(bounding_box['geometry']['coordinates'][0], raster_max_zoom, raster_imagery_attribution, output_directory, output_filename, port)
 
         # POSTSCRIPT: Kill docker container now that we are done
         kill_container_by_image('maptiler/tileserver-gl')

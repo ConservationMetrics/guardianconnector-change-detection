@@ -46,7 +46,7 @@ def main():
         output_directory = os.path.join('outputs', subdir_name)
     else:
         output_filename = args.output
-        output_directory = args.output
+        output_directory = os.path.join('outputs', output_filename)
     
     os.makedirs(output_directory, exist_ok=True)
 
@@ -67,7 +67,7 @@ def main():
         generate_map_html(mapbox_access_token, mapbox_style, mapbox_center_longitude, mapbox_center_latitude, mapbox_zoom, input_geojson_path, output_directory, output_filename)
 
         # STEP 4: Generate vector MBTiles from GeoJSON
-        generate_vector_mbtiles(input_geojson_path, output_directory, output_filename)
+        generate_vector_mbtiles(output_directory, output_filename)
 
         # STEP 5: Generate raster XYZ tiles from satellite imagery and bbox
         generate_raster_tiles(raster_imagery_url, raster_imagery_attribution, raster_max_zoom, bounding_box['geometry']['coordinates'][0], output_directory, output_filename)

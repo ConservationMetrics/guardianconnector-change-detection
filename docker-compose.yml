@@ -10,9 +10,10 @@ services:
     ports:
       - "80:80"
     environment:
-      - INPUT_FILE=example.geojson
+      - INPUT_FILE=${INPUT_FILE}
+      - OUTPUT=${OUTPUT}
       - ENVIRONMENT=docker
-    command: python docker-generate.py --input ${INPUT_FILE}
+    command: python docker-generate.py --input ${INPUT_FILE} --output ${OUTPUT}
 
   tileserver-gl:
     build:
@@ -21,7 +22,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./outputs/example/mapbox-map:/data
+      - ./outputs/${OUTPUT}/mapbox-map:/data
     depends_on:
       - generate-assets
 
@@ -32,6 +33,7 @@ services:
     depends_on:
       - tileserver-gl
     environment:
-      - INPUT_FILE=example.geojson
+      - INPUT_FILE=${INPUT_FILE}
+      - OUTPUT=${OUTPUT}
       - ENVIRONMENT=docker
-    command: python docker-tileserver-compile.py --input ${INPUT_FILE}
+    command: python docker-tileserver-compile.py --input ${INPUT_FILE} --output ${OUTPUT}
