@@ -6,7 +6,7 @@ You can execute this script using Docker or directly with Python (note that the 
 
 ## Steps
 
-The `main.py` script follows these steps:
+The script follows these steps:
 
 1. Copy GeoJSON file to outputs directory
 2. Get bounding box for GeoJSON (all features)
@@ -19,6 +19,8 @@ The `main.py` script follows these steps:
 9. Generate overlay map HTML map (to preview style)
 10. Serve maps using `tileserver-gl`
 11. Generate composite MBTiles from `tileserver-gl` map loading the style
+
+For Python, these steps are all contained in the `main.py` script. For Docker, we need to split these up due to compose service orchestration; steps 1-9 are handled in  `docker-generate.py`, step 10 is handled by running a `tileserver-gl` service, and step 11 is handled in `docker-tileserver-compile.py`.
 
 ## Configure
 
