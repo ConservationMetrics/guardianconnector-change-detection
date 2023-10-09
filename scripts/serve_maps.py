@@ -4,12 +4,14 @@ import subprocess
 import json
 import socket
 
-def generate_tileserver_config(map_directory, output_filename):
+def generate_tileserver_config(output_directory, output_filename):
+    map_directory = os.path.join(output_directory, 'mapbox-map')
+    
     # Check if config already exists
     config_path = os.path.join(map_directory, "config.json")
+    
     if os.path.exists(config_path):
-        print("config.json already exists!")
-        return
+        os.remove(config_path)
 
     style_path = os.path.join(map_directory, "style.json")
     if not os.path.exists(style_path):
@@ -63,19 +65,19 @@ def generate_tileserver_config(map_directory, output_filename):
     try:
         with open(config_path, 'w') as config_file:
             json.dump(config, config_file, indent=4)
-        print("config.json generated successfully!")
+        print(f"\033[1m\033[32mConfig.json file generated:\033[0m {config_path}")
     except Exception as e:
         print(f"[31mError generating config.json: {e}")
         sys.exit(1)
 
-def serve_tileserver_gl(output_directory, output_filename):
+def serve_tileserver_gl(output_directory, output_filename, env_port):
     map_directory = os.path.join(output_directory, 'mapbox-map')
 
     # Generate Tileserver-GL config if not found
     config_path = os.path.join(map_directory, "config.json")
     if os.path.exists(config_path):
         os.remove(config_path)
-    generate_tileserver_config(map_directory, output_filename)
+    generate_tileserver_config(output_directory, output_filename)
 
     current_directory = os.getcwd()
     volume_mapping = f"{current_directory}/{map_directory}:/data"
@@ -84,11 +86,13 @@ def serve_tileserver_gl(output_directory, output_filename):
     s.connect(("8.8.8.8", 80))
     local_ip = s.getsockname()[0]
     s.close()
+    
+    port = env_port if env_port is not None else "8080"
 
     command = [
         "docker", "run", "--rm", "-it",
         "-v", volume_mapping,
-        "-p", "8080:8080",
+        "-p", f"{port}:8080",
         "maptiler/tileserver-gl"
     ]
 
@@ -100,7 +104,7 @@ def serve_tileserver_gl(output_directory, output_filename):
             line = proc.stdout.readline()
             if "Startup complete" in line:
                 subprocess.run('stty sane', shell=True)
-                print(f"\033[0m\033[1m\033[32mTileServer-GL is serving the map at http://{local_ip}:8080!\033[0m")
+                print(f"\033[0m\033[1m\033[32mTileServer-GL is serving the map at http://{local_ip}:{port}!\033[0m")
                 break
     except subprocess.CalledProcessError:
         subprocess.run('stty sane', shell=True)

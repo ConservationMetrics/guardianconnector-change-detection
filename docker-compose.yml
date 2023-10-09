@@ -1,0 +1,39 @@
+version: '3'
+services:
+  generate-assets:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: guardianconnector-change-detection:latest
+    volumes:
+      - .:/app
+    ports:
+      - "80:80"
+    environment:
+      - INPUT_FILE=${INPUT_FILE}
+      - OUTPUT=${OUTPUT}
+      - ENVIRONMENT=docker
+    command: python docker-generate.py --input ${INPUT_FILE} --output ${OUTPUT}
+
+  tileserver-gl:
+    build:
+      context: .
+      dockerfile: Dockerfile.tileserver
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./outputs/${OUTPUT}/mapbox-map:/data
+    depends_on:
+      - generate-assets
+
+  compile-composite-raster:
+    image: guardianconnector-change-detection:latest
+    volumes:
+      - .:/app
+    depends_on:
+      - tileserver-gl
+    environment:
+      - INPUT_FILE=${INPUT_FILE}
+      - OUTPUT=${OUTPUT}
+      - ENVIRONMENT=docker
+    command: python docker-tileserver-compile.py --input ${INPUT_FILE} --output ${OUTPUT}

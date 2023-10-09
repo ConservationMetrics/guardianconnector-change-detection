@@ -1,0 +1,14 @@
+# Use the official maptiler/tileserver-gl image as the base image
+FROM maptiler/tileserver-gl
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Define the environment variable
+ENV OUTPUT=__OUTPUT__
+
+# Add /usr/src/app to the PATH
+ENV PATH /usr/src/app:$PATH
+
+# Command to wait for the file and then start tileserver-gl
+CMD ["sh", "-c", "DIR_PATH=\"/data\"; FILE_PATH=\"${DIR_PATH}/config.json\"; while [ ! -d $DIR_PATH ] || [ ! -f $FILE_PATH ]; do sleep 1; done; echo \"config.json exists, starting tileserver-gl...\"; exec /usr/src/app/docker-entrypoint.sh /usr/src/app/src/main.js -c ${DIR_PATH}/config.json"]

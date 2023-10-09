@@ -2,13 +2,14 @@ import os
 import subprocess
 import sys
 import json
-import socket
 import requests
+import socket
+import time
 import math
 import mercantile
 import sqlite3
 
-def generate_vector_mbtiles(geojson_input_path, output_directory, output_filename):
+def generate_vector_mbtiles(output_directory, output_filename):
     # Create the mapbox-map dir if it doesn't already exist
     mapbox_map_dir = os.path.join(output_directory, "mapbox-map")
     os.makedirs(mapbox_map_dir, exist_ok=True)
@@ -20,7 +21,7 @@ def generate_vector_mbtiles(geojson_input_path, output_directory, output_filenam
     vector_mbtiles_output_path = os.path.join(mapbox_map_dir, 'tiles', f"{vector_mbtiles_output_filename}.mbtiles")
 
     # Generate MBTiles using tippecanoe
-    command = f"tippecanoe -o {vector_mbtiles_output_path} --force {geojson_input_path}"
+    command = f"tippecanoe -o {vector_mbtiles_output_path} --force {output_directory}/{output_filename}.geojson"
 
     try:
         os.system(command)
@@ -130,17 +131,33 @@ def latlon_to_tile(lat, lon, zoom):
     ytile = int((1.0 - math.log(math.tan(math.radians(lat)) + (1 / math.cos(math.radians(lat)))) / math.pi) / 2.0 * n)
     return (xtile, ytile)
 
-def generate_mbtiles_from_tileserver(bbox, maxzoom, raster_imagery_attribution, output_directory, output_filename):
+def wait_for_tileserver_gl(address, port):
+    while True:
+        try:
+            response = requests.get(f'http://{address}:{port}/health')
+            if response.status_code == 200:
+                print('Health check: tileserver is ready')
+                break
+        except requests.exceptions.ConnectionError:
+            pass
+        time.sleep(2)
+
+def generate_mbtiles_from_tileserver(bbox, maxzoom, raster_imagery_attribution, output_directory, output_filename, env_port):
     try:
         minzoom = 0
         maxzoom = int(maxzoom)
 
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        local_ip = s.getsockname()[0]
-        s.close()
+        environment = os.environ.get('ENVIRONMENT')
 
-        url_template = f"http://{local_ip}:8080/styles/example/{{z}}/{{x}}/{{y}}.jpg"
+        if environment == 'docker':
+            address = "tileserver-gl"
+        else:
+            address = "localhost"
+            
+        port = env_port if env_port is not None else "8080"
+
+        url_template = f"http://{address}:{port}/styles/{output_filename}/{{z}}/{{x}}/{{y}}.jpg"
+
         longitudes = [coord[0] for coord in bbox]
         latitudes = [coord[1] for coord in bbox]
 
@@ -152,6 +169,9 @@ def generate_mbtiles_from_tileserver(bbox, maxzoom, raster_imagery_attribution, 
         if os.path.exists(output_file):
             os.remove(output_file)
 
+        # Wait until Tileserver-GL has fully started
+        wait_for_tileserver_gl(address, port)
+        
         print("Downloading composite raster tiles from Tileserver-GL...")
         conn = sqlite3.connect(output_file)
         cursor = conn.cursor()

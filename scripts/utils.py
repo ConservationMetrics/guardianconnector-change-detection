@@ -14,7 +14,7 @@ def load_html_template(template_path):
 def copy_geojson_file(input_path, output_directory, output_filename):
     try:
         # Determine the output GeoJSON filename
-        geojson_output_filename = os.path.basename(input_path)
+        geojson_output_filename = os.path.basename(f'{output_filename}.geojson')
         # Determine the full path to the output GeoJSON file
         geojson_output_path = os.path.join(output_directory, geojson_output_filename)
         # Copy the GeoJSON file to the outputs directory
@@ -32,7 +32,7 @@ def read_geojson_file(input_path):
     except Exception as e:
         print(f"\033[1m\033[31mError reading GeoJSON file:\033[0m {e}")
         sys.exit(1)
-
+        
 def kill_container_by_image(image_name):
     try:
         # Get a list of running containers
