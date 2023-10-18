@@ -3,13 +3,17 @@ import sys
 import argparse
 import traceback
 from dotenv import load_dotenv
-from scripts.utils import (copy_geojson_file)
-from scripts.calculate_bbox import get_bounding_box
-from scripts.generate_maps import (generate_map_html, generate_overlay_map)
-from scripts.generate_tiles import (generate_vector_mbtiles, generate_raster_tiles, convert_xyz_to_mbtiles)
-from scripts.generate_style import generate_style_with_mbtiles
-from scripts.generate_fonts_sprites import copy_fonts_and_sprites
-from scripts.serve_maps import generate_tileserver_config
+from gccd.utils import copy_geojson_file
+from gccd.calculate_bbox import get_bounding_box
+from gccd.generate_maps import generate_map_html, generate_overlay_map
+from gccd.generate_tiles import (
+    generate_vector_mbtiles,
+    generate_raster_tiles,
+    convert_xyz_to_mbtiles,
+)
+from gccd.generate_style import generate_style_with_mbtiles
+from gccd.generate_fonts_sprites import copy_fonts_and_sprites
+from gccd.serve_maps import generate_tileserver_config
 
 # Load environment variables from .env file
 load_dotenv()

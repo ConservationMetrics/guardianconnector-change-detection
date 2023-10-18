@@ -3,8 +3,8 @@ import sys
 import argparse
 import traceback
 from dotenv import load_dotenv
-from scripts.calculate_bbox import get_bounding_box
-from scripts.generate_tiles import generate_mbtiles_from_tileserver
+from gccd.calculate_bbox import get_bounding_box
+from gccd.generate_tiles import generate_mbtiles_from_tileserver
 
 # Load environment variables from .env file
 load_dotenv()
