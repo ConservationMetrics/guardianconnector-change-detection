@@ -20,18 +20,29 @@ Create a `.env` file using the provided example as a template. The variables rep
 ### Prerequisites
 Build and install the library in one of two ways:
 ```
+cd gccd_pkg
 pip install -e .
 ```
 
 or
 
 ```
-tox
+cd gccd_pkg
+tox --notest
 ```
 
 You will also need to install:
 
 * `tippecanoe` according to the instructions in the [Github repo](https://github.com/mapbox/tippecanoe).
+
+### Tests
+Tox will both rebuild the package and run tests.
+
+```
+cd gccd_pkg
+tox
+```
+
 
 ### Execute
 In the virtual environment where you installed gccd, execute the driver script using the command:
