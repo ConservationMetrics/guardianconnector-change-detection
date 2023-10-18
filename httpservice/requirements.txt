@@ -1,3 +1,4 @@
 fastapi~=0.104.0
 pydantic>=1.10.13,<2.0.0
 uvicorn>=0.23.2,<0.24.0
+# "gccd @ git+https://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@github.com/ConservationMetrics/guardianconnector-change-detection.git@main#subdirectory=gccd"
