@@ -2,7 +2,7 @@ import os
 import sys
 import json
 
-TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "..", "templates")
+TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "templates")
 
 
 def generate_style_with_mbtiles(raster_max_zoom, output_directory, output_filename):

@@ -23,6 +23,8 @@ dynamic = ["version"]
 [tool.setuptools]
 packages = ["gccd"]
 script-files = ["scripts/main.py"]
+[tool.setuptools.package-data]
+gccd = ["templates/*"]
 
 [tool.tox]
 legacy_tox_ini = """

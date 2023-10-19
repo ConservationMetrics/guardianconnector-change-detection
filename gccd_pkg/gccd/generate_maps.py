@@ -1,7 +1,7 @@
 import os
 import sys
 
-TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "..", "templates")
+TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "templates")
 
 
 def generate_html_file(template_filename, output_path, mapbox_access_token=None, **template_vars):
