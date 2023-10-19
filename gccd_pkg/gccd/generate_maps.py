@@ -1,10 +1,13 @@
 import os
 import sys
 
+TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "..", "templates")
+
+
 def generate_html_file(template_filename, output_path, mapbox_access_token=None, **template_vars):
     try:
         # Load the template
-        template_path = os.path.join('templates', template_filename)
+        template_path = os.path.join(TEMPLATES_DIR, template_filename)
         with open(template_path, 'r') as template_file:
             template_content = template_file.read()
 
