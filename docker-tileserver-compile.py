@@ -2,12 +2,9 @@ import os
 import sys
 import argparse
 import traceback
-from dotenv import load_dotenv
 from gccd.calculate_bbox import get_bounding_box
 from gccd.generate_tiles import generate_mbtiles_from_tileserver
 
-# Load environment variables from .env file
-load_dotenv()
 
 # Get environment variables
 raster_max_zoom = os.getenv('RASTER_MBTILES_MAX_ZOOM')

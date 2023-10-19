@@ -19,7 +19,9 @@ Create a `.env` file using the provided example as a template. The variables rep
 
 ### Prerequisites
 Build and install the library in one of two ways:
+
 ```
+# Install in your current virtual env
 cd gccd_pkg
 pip install -e .
 ```
@@ -27,6 +29,7 @@ pip install -e .
 or
 
 ```
+# Install in a isolated environment that lives at `gccd_pkg/.tox/py310/`
 cd gccd_pkg
 tox --notest
 ```
@@ -45,11 +48,17 @@ tox
 
 
 ### Execute
-In the virtual environment where you installed gccd, execute the driver script using the command:
+In the virtual environment where you installed gccd, execute the driver script `main.py`.
+
+For development, you are likely to store your environment variables in an `.env` files,
+so use `dotenv run` to slurp them up into Python's environment:
 
 ```
-main.py --input [FILENAME].geojson --output [OUTPUT]
+dotenv run -- main.py --input [FILENAME].geojson --output [OUTPUT]
 ```
+
+If the necessary environment variables are already set (e.g. in production),
+omit the `dotenv run --`.
 
 The `--output` flag is optional and can be used to name the directory and any files like MBTiles differently than your input file. If omitted, the script will employ the input filename for outputs.
 

@@ -2,7 +2,6 @@ import os
 import sys
 import argparse
 import traceback
-from dotenv import load_dotenv
 from gccd.utils import copy_geojson_file
 from gccd.calculate_bbox import get_bounding_box
 from gccd.generate_maps import generate_map_html, generate_overlay_map
@@ -15,8 +14,6 @@ from gccd.generate_style import generate_style_with_mbtiles
 from gccd.generate_fonts_sprites import copy_fonts_and_sprites
 from gccd.serve_maps import generate_tileserver_config
 
-# Load environment variables from .env file
-load_dotenv()
 
 # Get environment variables
 mapbox_access_token = os.getenv('MAPBOX_ACCESS_TOKEN')
