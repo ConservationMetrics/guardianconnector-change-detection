@@ -1,8 +1,11 @@
+import json
+import tempfile
 from typing import Any, List, Union
 
 import fastapi
 
-from gccd.calculate_bbox import calculate_bounding_box
+import gccd
+
 
 app = fastapi.FastAPI()
 
@@ -12,7 +15,15 @@ def redirect_to_docs():
     return fastapi.responses.RedirectResponse("/docs")
 
 
-@app.post("/boundingbox/")
-def calc_bbox(feacoll: Any = fastapi.Body(), q: Union[str, None] = None):
-    bbox = calculate_bounding_box(feacoll["features"])
+@app.post("/changemaps/")
+def make_changemaps(feacoll: Any = fastapi.Body(), q: Union[str, None] = None):
+    with tempfile.NamedTemporaryFile(
+        "w+", prefix="input-", suffix=".json"
+    ) as input_fp, tempfile.TemporaryDirectory() as outdir:
+        print(input_fp.name)
+        json.dump(feacoll, input_fp)
+        input_fp.flush()
+        input_fp.seek(0)
+
+        bbox = gccd.flow(input_fp.name, outdir, "output")
     return {"bbox": bbox}
