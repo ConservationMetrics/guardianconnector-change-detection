@@ -2,7 +2,7 @@ import json
 import pyproj
 from shapely.geometry import Polygon
 from shapely.ops import transform
-from scripts.utils import read_geojson_file
+from gccd.utils import read_geojson_file
 
 def get_bounding_box(input_geojson_path, raster_buffer_size=None):
     try:

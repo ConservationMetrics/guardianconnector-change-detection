@@ -1,8 +1,8 @@
-FROM python:3
+FROM python:3.10-slim-bullseye
 
 # Install tippecanoe
 RUN apt-get update && \
-    apt-get install -y build-essential libsqlite3-dev zlib1g-dev && \
+    apt-get install -y git build-essential libsqlite3-dev zlib1g-dev && \
     git clone https://github.com/felt/tippecanoe.git && \
     cd tippecanoe && \
     make -j && \
@@ -14,11 +14,11 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 ADD . /app
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Install gccd library
+RUN pip install -e gccd_pkg
 
 # Make port 80 available to the world outside this container
 EXPOSE 80
 
-# Run app.py when the container launches
+# Run this command when the container launches
 CMD ["python", "generate.py"]

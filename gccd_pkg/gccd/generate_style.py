@@ -2,9 +2,12 @@ import os
 import sys
 import json
 
+TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "templates")
+
+
 def generate_style_with_mbtiles(raster_max_zoom, output_directory, output_filename):
     mapbox_map_dir = os.path.join(output_directory, "mapbox-map")
-    style_template_path = os.path.join('templates', 'style.json')
+    style_template_path = os.path.join(TEMPLATES_DIR, 'style.json')
     try:
         with open(style_template_path, 'r') as style_template_file:
             style_template = json.load(style_template_file)

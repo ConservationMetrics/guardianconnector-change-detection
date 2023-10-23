@@ -9,6 +9,8 @@ services:
       - .:/app
     ports:
       - "80:80"
+    env_file:
+      - .env
     environment:
       - INPUT_FILE=${INPUT_FILE}
       - OUTPUT=${OUTPUT}
@@ -32,6 +34,8 @@ services:
       - .:/app
     depends_on:
       - tileserver-gl
+    env_file:
+      - .env
     environment:
       - INPUT_FILE=${INPUT_FILE}
       - OUTPUT=${OUTPUT}

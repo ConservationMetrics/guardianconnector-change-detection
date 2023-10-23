@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gccd"
+authors = [{name = "Rudo Kemper", email = "rudo@conservationmetrics.com"}]
+description = "generate offline map assets with a satellite imagery background using a GeoJSON file"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "geojson==3.0.1",
+    "mbutil==0.3.0",
+    "mercantile==1.2.1",
+    "pyproj==3.6.0",
+    "python-dotenv==1.0.0",
+    "Requests==2.31.0",
+    "shapely==2.0.1",
+    "shutilwhich==1.1.0"
+]
+dynamic = ["version"]
+
+[tool.setuptools]
+packages = ["gccd"]
+script-files = ["scripts/main.py"]
+[tool.setuptools.package-data]
+gccd = ["templates/*"]
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+min_version = 4.0
+env_list =
+    py310
+
+[testenv]
+deps = pytest
+commands = pytest {posargs} -vv
+"""

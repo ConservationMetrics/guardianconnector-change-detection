@@ -38,40 +38,49 @@ def generate_tileserver_config(output_directory, output_filename):
                 "fonts": "fonts",
                 "sprites": "sprites",
                 "mbtiles": "tiles",
-                "styles": "./"
+                "styles": "./",
             },
-            "serveAllFonts": "true"
+            "serveAllFonts": "true",
         },
         "styles": {
             output_filename: {
                 "style": "style.json",
-                "tilejson": {
-                    "format": "png"
-                },
+                "tilejson": {"format": "png"},
                 "serve_rendered": "true",
-                "serve_data": "true"
+                "serve_data": "true",
             }
         },
         "data": {
-            f"{output_filename}-raster":{
-                "mbtiles":f"{output_filename}-raster.mbtiles"
+            f"{output_filename}-raster": {
+                "mbtiles": f"{output_filename}-raster.mbtiles"
             },
-            f"{output_filename}-vector":{
-                "mbtiles":f"{output_filename}-vector.mbtiles"
-            }
-        }
+            f"{output_filename}-vector": {
+                "mbtiles": f"{output_filename}-vector.mbtiles"
+            },
+        },
     }
 
     try:
-        with open(config_path, 'w') as config_file:
+        with open(config_path, "w") as config_file:
             json.dump(config, config_file, indent=4)
         print(f"\033[1m\033[32mConfig.json file generated:\033[0m {config_path}")
     except Exception as e:
         print(f"[31mError generating config.json: {e}")
         sys.exit(1)
 
+
 def serve_tileserver_gl(output_directory, output_filename, env_port):
-    map_directory = os.path.join(output_directory, 'mapbox-map')
+    """
+    Parameters
+    ----------
+    output_directory : str
+        absolute path
+    """
+    if not os.path.isabs(output_directory):
+        raise ValueError(
+            f"Expected output_directory to be absolute, got [{output_directory}]"
+        )
+    map_directory = os.path.join(output_directory, "mapbox-map")
 
     # Generate Tileserver-GL config if not found
     config_path = os.path.join(map_directory, "config.json")
@@ -79,8 +88,7 @@ def serve_tileserver_gl(output_directory, output_filename, env_port):
         os.remove(config_path)
     generate_tileserver_config(output_directory, output_filename)
 
-    current_directory = os.getcwd()
-    volume_mapping = f"{current_directory}/{map_directory}:/data"
+    volume_mapping = f"{map_directory}:/data"
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
