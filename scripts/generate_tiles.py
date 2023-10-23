@@ -24,8 +24,12 @@ def generate_vector_mbtiles(output_directory, output_filename):
     command = f"tippecanoe -o {vector_mbtiles_output_path} --force {output_directory}/{output_filename}.geojson"
 
     try:
-        os.system(command)
-        print(f"\033[1m\033[32mVector MBTiles file generated:\033[0m {vector_mbtiles_output_path}")
+        ret = os.system(command)
+        if ret == 0:
+            print(f"\033[1m\033[32mVector MBTiles file generated:\033[0m {vector_mbtiles_output_path}")
+        else:
+            print(f"\033[1m\033[31mError generating Vector MBTiles:\033[0m tippecanoe exit code {ret}")
+            sys.exit(1)
     except Exception as e:
         print(f"\033[1m\033[31mError generating Vector MBTiles:\033[0m {e}")
         sys.exit(1)
