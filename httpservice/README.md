@@ -18,9 +18,11 @@ this repo) and copy it to where it needs to live for the Dockerfile to slurp it 
     # to build image tagged `gccd`
     ./build.sh
 
+or
+
     # to build image with a custom tag, pass the tag as an argument:
     DATE=`date "+%Y%m%d.%H%M%S"`
-    GIT_HEAD=$(echo $CIRCLE_SHA1 | cut -c1-7)
+    GIT_HEAD=$(git rev-parse --short HEAD)
     IMAGE_TAG=$DATE-$GIT_HEAD
     ./build.sh guardiancr.azurecr.io/gccr:${IMAGE_TAG}
 

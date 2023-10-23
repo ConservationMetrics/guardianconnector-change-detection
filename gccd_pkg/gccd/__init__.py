@@ -22,7 +22,6 @@ raster_imagery_url = os.getenv("RASTER_IMAGERY_URL")
 raster_imagery_attribution = os.getenv("RASTER_IMAGERY_ATTRIBUTION")
 raster_max_zoom = os.getenv("RASTER_MBTILES_MAX_ZOOM")
 raster_buffer_size = os.getenv("RASTER_BUFFER_SIZE")
-port = os.getenv("PORT")
 
 
 def flow(input_geojson_path, output_directory, output_filename):
