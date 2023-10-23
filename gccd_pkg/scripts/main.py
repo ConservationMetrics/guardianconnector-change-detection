@@ -48,10 +48,10 @@ def main():
     if args.output is None:
         output_filename = os.path.splitext(os.path.basename(input_geojson_path))[0]
         subdir_name = os.path.splitext(os.path.basename(input_geojson_path))[0]
-        output_directory = os.path.join('outputs', subdir_name)
+        output_directory = os.path.abspath(os.path.join('outputs', subdir_name))
     else:
         output_filename = args.output
-        output_directory = os.path.join('outputs', output_filename)
+        output_directory = os.path.abspath(os.path.join('outputs', output_filename))
     
     os.makedirs(output_directory, exist_ok=True)
 
