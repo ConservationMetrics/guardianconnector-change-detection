@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import shutil
 import json
 import requests
 import socket
@@ -120,6 +121,9 @@ def convert_xyz_to_mbtiles(output_directory, output_filename):
         subprocess.call(command, shell=True)
         print()
         print("\033[1m\033[32mRaster MBTiles file generated:\033[0m", f"{raster_mbtiles_output_path}")
+
+        shutil.rmtree(xyz_output_dir)
+        print(f"Deleted XYZ directory: {xyz_output_dir}")
     except subprocess.CalledProcessError:
         raise RuntimeError(f"\033[1m\033[31mFailed to generate MBTiles using command:\033[0m {command}")
     
