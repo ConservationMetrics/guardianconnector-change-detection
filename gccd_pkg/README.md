@@ -69,34 +69,3 @@ Once the script is run, it populates the `/outputs` directory with:
 * **GeoJSON**: a duplicate of the input GeoJSON.
 * **HTML map**: A preview of the GeoJSON overlayed on a Mapbox satellite imagery + streets map. The map renders each kind of GeoJSON geometry (Point, Polygon, LineString) and zooms to the maximum extent of the data. The map also adds a label for fields with key `type_of_alert`.
 * **MBTiles**: A raster tileset which styles and overlays the input GeoJSON on top of satellite imagery, downloaded to the extent of the bounding box of the GeoJSON (or higher per the `RASTER_BUFFER_SIZE` env var).
-
-The script also generates a `mapbox-map` directory with map resources placed in accordance to the Mapbox style spec:
-
-* **XYZ tiles**:  Satellite imagery tiles that overlap with the input GeoJSON's bounding box. (These are used to generate the Raster MBTiles and could be deleted, but are kept here in case they are useful for a different purpose.)
-* **Vector MBTiles**: MBTiles format of the GeoJSON, intended for map stylesheets in data collection apps.
-* **Raster MBTiles**: MBTiles format of the satellite imagery tiles.
-* **Fonts and sprites**: font and sprite glyph resources required to load a Mapbox map. Only Open Sans Regular is compiled (which is what is used in the style).
-* **Stylesheet**: A `style.json` file which overlays the MBTiles on top of satellite imagery.
-
-Outputs are systematically organized as follows (using `example` output):
-
-```
-example/
-├── example.geojson
-├── example.html
-├── example.mbtiles
-└── mapbox-map/
-    ├── style.json
-    ├── index.html
-    ├── fonts/
-    │   └── Open Sans Regular/
-    │   │   ├── ... font glyphs
-    ├── sprites/
-    │   ├── ... (sprite image files)
-    └── tiles/
-        ├── example-raster.mbtiles
-        └── example-vector.mbtiles
-        └── xyz/
-            ├── ... metadata.json
-            ├── ... (XYZ tile files)
-```

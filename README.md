@@ -43,6 +43,39 @@ See [`gccd_pkg/README.md`](gccd_pkg/README.md).
 
 See [`httpservice/README.md`](httpservice/README.md).
 
+## Outputs
+
+The script also generates a `mapbox-map` directory with map resources placed in accordance to the Mapbox style spec:
+
+* **XYZ tiles**:  Satellite imagery tiles that overlap with the input GeoJSON's bounding box. (These are used to generate the Raster MBTiles and could be deleted, but are kept here in case they are useful for a different purpose.)
+* **Vector MBTiles**: MBTiles format of the GeoJSON, intended for map stylesheets in data collection apps.
+* **Raster MBTiles**: MBTiles format of the satellite imagery tiles.
+* **Fonts and sprites**: font and sprite glyph resources required to load a Mapbox map. Only Open Sans Regular is compiled (which is what is used in the style).
+* **Stylesheet**: A `style.json` file which overlays the MBTiles on top of satellite imagery.
+
+Outputs are systematically organized as follows (using `example` output):
+
+```
+example/
+├── example.geojson
+├── example.html
+├── example.mbtiles
+└── mapbox-map/
+    ├── style.json
+    ├── index.html
+    ├── fonts/
+    │   └── Open Sans Regular/
+    │   │   ├── ... font glyphs
+    ├── sprites/
+    │   ├── ... (sprite image files)
+    └── tiles/
+        ├── example-raster.mbtiles
+        └── example-vector.mbtiles
+        └── xyz/
+            ├── ... metadata.json
+            ├── ... (XYZ tile files)
+```
+
 ## How to use the outputs
 
 For **ODK/Kobo Collect**, you can use the final raster tileset as a background map for any geo fields by [transferring them to your device](https://docs.getodk.org/collect-offline-maps/). This process is still somewhat cumbersome, involving either the use of a USB cable or `adb` (see link). Also, while ODK/Kobo Collect can render the vector MBTiles, it is done without styling; each feature is displayed in a different color picked by the applications.
