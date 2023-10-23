@@ -101,6 +101,13 @@ def serve_tileserver_gl(output_directory, output_filename, env_port):
         proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
         while True:
+            if proc.poll() is not None:
+                subprocess.run("stty sane", shell=True)
+                print(
+                    "\033[1m\033[31mTileServer-GL process terminated, check docker logs\033[0m"
+                )
+                sys.exit(1)
+
             line = proc.stdout.readline()
             if "Startup complete" in line:
                 subprocess.run('stty sane', shell=True)
