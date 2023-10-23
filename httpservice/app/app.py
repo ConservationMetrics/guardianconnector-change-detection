@@ -46,7 +46,6 @@ async def make_changemaps(
     with tempfile.NamedTemporaryFile(
         "w+", prefix="input-", suffix=".json"
     ) as input_fp, tempfile.TemporaryDirectory() as outdir:
-        print(input_fp.name)
         json.dump(feacoll, input_fp)
         input_fp.flush()
         input_fp.seek(0)
