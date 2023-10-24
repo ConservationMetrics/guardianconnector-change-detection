@@ -24,7 +24,7 @@ or
     DATE=`date "+%Y%m%d.%H%M%S"`
     GIT_HEAD=$(git rev-parse --short HEAD)
     IMAGE_TAG=$DATE-$GIT_HEAD
-    ./build.sh guardiancr.azurecr.io/gccr:${IMAGE_TAG}
+    ./build.sh guardiancr.azurecr.io/gccd:${IMAGE_TAG}
 
 ## Run HTTP server
 
