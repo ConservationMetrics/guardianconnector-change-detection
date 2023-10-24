@@ -1,4 +1,7 @@
-FROM python:3.10-slim-bullseye
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential libsqlite3-dev zlib1g-dev git
+RUN git clone https://github.com/mapbox/tippecanoe.git && cd tippecanoe && make -j && make install && cd .. && rm -r tippecanoe
 
 COPY ./requirements.txt /code/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
