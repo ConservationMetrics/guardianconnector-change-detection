@@ -5,8 +5,9 @@ import tempfile
 from typing import Any
 
 import fastapi
-
 import gccd
+
+from .security import check_apikey_header
 
 
 app = fastapi.FastAPI()
@@ -39,7 +40,7 @@ def create_tarfile(directory, tar_filename):
                 tar.add(full_path, arcname=relative_path)
 
 
-@app.post("/changemaps/")
+@app.post("/changemaps/", dependencies=[fastapi.Security(check_apikey_header)])
 async def make_changemaps(
     feacoll: Any = fastapi.Body(), output_tar=fastapi.Depends(sendable_tempfile)
 ):
