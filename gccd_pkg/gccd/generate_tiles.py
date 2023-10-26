@@ -63,6 +63,9 @@ def generate_raster_tiles(raster_imagery_url, raster_imagery_attribution, raster
             print(response.text)
 
     print("Downloading satellite imagery raster XYZ tiles...")
+    
+    # Much of the below code is adapted from Microsoft's Bing Maps Tile System documentation:
+    # https://learn.microsoft.com/en-us/bingmaps/articles/bing-maps-tile-system
     for zoom_level in range(1, int(raster_max_zoom) + 1):
         col_start, row_end = latlon_to_tilexy(bbox_top_left[1], bbox_top_left[0], zoom_level)
         col_end, row_start = latlon_to_tilexy(bbox_bottom_right[1], bbox_bottom_right[0], zoom_level)
@@ -113,7 +116,7 @@ def convert_xyz_to_mbtiles(output_directory, output_filename):
         os.remove(raster_mbtiles_output_path)
         print(f"Deleted existing MBTiles file: {raster_mbtiles_output_path}")
 
-    # Convert XYZ to MBtiles using mbutil
+    # Convert XYZ to MBtiles using mb-util
     command = f"mb-util --image_format=jpg --silent {xyz_output_dir} {raster_mbtiles_output_path}"
 
     print("Creating raster mbtiles...")
