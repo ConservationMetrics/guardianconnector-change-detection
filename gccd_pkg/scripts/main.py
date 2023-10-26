@@ -11,7 +11,9 @@ from gccd.generate_tiles import generate_mbtiles_from_tileserver
 from gccd.serve_maps import serve_tileserver_gl
 
 
-port = os.getenv("PORT")
+port = os.getenv("PORT", 8080)
+raster_imagery_attribution = os.getenv("RASTER_IMAGERY_ATTRIBUTION", "")
+raster_max_zoom = os.getenv("RASTER_MBTILES_MAX_ZOOM", 14)
 
 
 def main():
