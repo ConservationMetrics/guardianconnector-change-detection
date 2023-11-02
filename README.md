@@ -13,7 +13,7 @@ The script follows these steps:
 
 1. Copy GeoJSON file to outputs directory
 2. Get bounding box for GeoJSON (all features)
-3. Generate Generate PMTiles for GeoTIFFS (if provided)
+3. Generate PMTiles from GeoTIFFS (if provided)
 4. Generate HTML map for previewing change detection alert (a swipe map if GeoTIFFs are provided)
 5. Generate vector MBTiles from GeoJSON
 6. Generate raster XYZ tiles from satellite imagery and bounding box
