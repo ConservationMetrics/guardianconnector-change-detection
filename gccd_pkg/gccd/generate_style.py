@@ -6,7 +6,7 @@ TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "templates")
 
 
 def generate_style_with_mbtiles(raster_max_zoom, output_directory, output_filename):
-    mapbox_map_dir = os.path.join(output_directory, "mapbox-map")
+    mapgl_dir = os.path.join(output_directory, "mapgl-map")
     style_template_path = os.path.join(TEMPLATES_DIR, 'style.json')
     try:
         with open(style_template_path, 'r') as style_template_file:
@@ -123,7 +123,7 @@ def generate_style_with_mbtiles(raster_max_zoom, output_directory, output_filena
     style_template['id'] = output_filename
 
     # Write the final style.json content to the output file
-    style_output_path = os.path.join(mapbox_map_dir, 'style.json')
+    style_output_path = os.path.join(mapgl_dir, 'style.json')
     try:
         with open(style_output_path, 'w') as style_output_file:
             json.dump(style_template, style_output_file, indent=4)

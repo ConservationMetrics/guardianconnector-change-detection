@@ -10,19 +10,45 @@ import math
 import mercantile
 import sqlite3
 
+def generate_pmtiles_from_geotiff(raster_max_zoom, t_number, output_directory, output_filename):
+    resources_dir = os.path.join(output_directory, "resources")
+    os.makedirs(resources_dir, exist_ok=True)
+
+    tif_filename = f"{output_filename}_{t_number}"
+    tif_filepath = os.path.join(resources_dir, os.path.basename(tif_filename)) 
+    xyz_dir = f"{resources_dir}/{tif_filename}/"
+    mbtiles_file = f"{resources_dir}/{tif_filename}.mbtiles"
+    pmtiles_file = f"{resources_dir}/{tif_filename}.pmtiles"
+
+    try:
+        # Convert GeoTIFF to XYZ
+        geotiff_to_xyz(raster_max_zoom, tif_filepath, xyz_dir)
+
+        # Convert XYZ to MBTiles
+        xyz_to_mbtiles(xyz_dir, "png", mbtiles_file)
+
+        # Convert MBTiles to PMTiles
+        mbtiles_to_pmtiles(mbtiles_file, pmtiles_file)
+
+        print(f"\033[1m\033[32mPMTiles file generated:\033[0m {pmtiles_file}")
+
+    except Exception as e:
+        print(f"\033[1m\033[31mError generating PMTiles:\033[0m {e}")
+        sys.exit(1)
+
 def generate_vector_mbtiles(output_directory, output_filename):
-    # Create the mapbox-map dir if it doesn't already exist
-    mapbox_map_dir = os.path.join(output_directory, "mapbox-map")
-    os.makedirs(mapbox_map_dir, exist_ok=True)
-    os.makedirs(f'{mapbox_map_dir}/tiles', exist_ok=True)
+    # Create the mapgl-map dir if it doesn't already exist
+    mapgl_dir = os.path.join(output_directory, "mapgl-map")
+    os.makedirs(mapgl_dir, exist_ok=True)
+    os.makedirs(f'{mapgl_dir}/tiles', exist_ok=True)
 
     vector_mbtiles_output_filename = str(output_filename) + '-vector'
 
-    # Determine the full path to the output MBTiles file within the 'mapbox-map/' directory
-    vector_mbtiles_output_path = os.path.join(mapbox_map_dir, 'tiles', f"{vector_mbtiles_output_filename}.mbtiles")
+    # Determine the full path to the output MBTiles file within the 'mapgl-map/' directory
+    vector_mbtiles_output_path = os.path.join(mapgl_dir, 'tiles', f"{vector_mbtiles_output_filename}.mbtiles")
 
     # Generate MBTiles using tippecanoe
-    command = f"tippecanoe -o {vector_mbtiles_output_path} --force {output_directory}/{output_filename}.geojson"
+    command = f"tippecanoe -o {vector_mbtiles_output_path} --force {output_directory}/resources/{output_filename}.geojson"
 
     try:
         ret = os.system(command)
@@ -36,7 +62,7 @@ def generate_vector_mbtiles(output_directory, output_filename):
         sys.exit(1)
 
 def generate_raster_tiles(raster_imagery_url, raster_imagery_attribution, raster_max_zoom, bbox, output_directory, output_filename):
-    xyz_output_dir = os.path.join(output_directory, "mapbox-map/tiles/xyz")
+    xyz_output_dir = os.path.join(output_directory, "mapgl-map/tiles/xyz")
     os.makedirs(xyz_output_dir, exist_ok=True)
 
     bbox_top_left = bbox[0]
@@ -107,29 +133,53 @@ def generate_raster_tiles(raster_imagery_url, raster_imagery_attribution, raster
 
     print(f"XYZ tiles metadata.json saved to {metadata_file_path}")
 
-def convert_xyz_to_mbtiles(output_directory, output_filename):
-    mapbox_map_dir = os.path.join(output_directory, 'mapbox-map')
-    xyz_output_dir = os.path.join(mapbox_map_dir, 'tiles', 'xyz')
-    raster_mbtiles_output_path = os.path.join(mapbox_map_dir, 'tiles', f"{output_filename}-raster.mbtiles")
+def convert_raster_tiles(output_directory, output_filename):
+    mapgl_dir = os.path.join(output_directory, 'mapgl-map')
+    xyz_output_dir = os.path.join(mapgl_dir, 'tiles', 'xyz')
+    mbtiles_output_path = os.path.join(mapgl_dir, 'tiles', f"{output_filename}.mbtiles")
+    xyz_to_mbtiles(xyz_output_dir, "jpg", mbtiles_output_path)
 
-    if os.path.exists(raster_mbtiles_output_path):
-        os.remove(raster_mbtiles_output_path)
-        print(f"Deleted existing MBTiles file: {raster_mbtiles_output_path}")
+def geotiff_to_xyz(raster_max_zoom, tif_filepath, xyz_dir):
+    command = f"gdal2tiles.py -p mercator -z 0-{raster_max_zoom} -w none -r bilinear --xyz {tif_filepath}.tif {xyz_dir}"
+    ret = os.system(command)
+    if ret != 0:
+        raise Exception(f"gdal2tiles.py exit code {ret}")
+        sys.exit(1)
 
-    # Convert XYZ to MBtiles using mb-util
-    command = f"mb-util --image_format=jpg --silent {xyz_output_dir} {raster_mbtiles_output_path}"
+def xyz_to_mbtiles(xyz_dir, image_format, mbtiles_file):
+    if os.path.exists(mbtiles_file):
+        os.remove(mbtiles_file)
+        print(f"Deleted existing MBTiles file: {mbtiles_file}")
 
-    print("Creating raster mbtiles...")
+    # Convert XYZ to MBTiles using mb-util
+    command = f"mb-util --image_format={image_format} --silent {xyz_dir} {mbtiles_file}"
+
+    print("Creating MBTiles...")
     try:
         subprocess.call(command, shell=True)
         print()
-        print("\033[1m\033[32mRaster MBTiles file generated:\033[0m", f"{raster_mbtiles_output_path}")
+        print("\033[1m\033[32mMBTiles file generated:\033[0m", f"{mbtiles_file}")
 
-        shutil.rmtree(xyz_output_dir)
-        print(f"Deleted XYZ directory: {xyz_output_dir}")
+        shutil.rmtree(xyz_dir)
+        print(f"Deleted XYZ directory: {xyz_dir}")
     except subprocess.CalledProcessError:
         raise RuntimeError(f"\033[1m\033[31mFailed to generate MBTiles using command:\033[0m {command}")
     
+def mbtiles_to_pmtiles(mbtiles_file, pmtiles_file):
+    if os.path.exists(pmtiles_file):
+        os.remove(pmtiles_file)
+        print(f"Deleted existing PMTiles file: {pmtiles_file}")
+
+    # Convert MBTiles to PMTiles using go-pmtiles
+    command = f"pmtiles convert {mbtiles_file} {pmtiles_file}"
+
+    print("Creating PMTiles...")
+    ret = os.system(command)
+    os.remove(mbtiles_file)
+    if ret != 0:
+        raise Exception(f"pmtiles convert exit code {ret}")
+        sys.exit(1)
+
 def download_tile(zoom, x, y, url_template):
     tile_url = url_template.format(z=zoom, x=x, y=y)
     response = requests.get(tile_url)

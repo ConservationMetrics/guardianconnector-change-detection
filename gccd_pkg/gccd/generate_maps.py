@@ -4,7 +4,7 @@ import sys
 TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "templates")
 
 
-def generate_html_file(template_filename, output_path, mapbox_access_token=None, **template_vars):
+def generate_html_file(template_filename, output_path, **template_vars):
     try:
         # Load the template
         template_path = os.path.join(TEMPLATES_DIR, template_filename)
@@ -12,8 +12,6 @@ def generate_html_file(template_filename, output_path, mapbox_access_token=None,
             template_content = template_file.read()
 
         # Replace placeholders with provided template variables
-        if mapbox_access_token:
-            template_vars['pk.ey'] = mapbox_access_token
         for var_name, var_value in template_vars.items():
             template_content = template_content.replace(var_name, var_value)
 
@@ -25,23 +23,32 @@ def generate_html_file(template_filename, output_path, mapbox_access_token=None,
         print(f"\033[1m\033[31mError writing HTML output file:\033[0m {e}")
         sys.exit(1)
 
-def generate_map_html(mapbox_access_token, mapbox_style, mapbox_center_longitude, mapbox_center_latitude, mapbox_zoom, geojson_input_path, output_path, output_filename):
+def generate_html_map(map_center_longitude, map_center_latitude, map_zoom, input_geojson_path, input_t0_path, input_t1_path, output_path, output_filename):
+    
     output_html_path = os.path.join(output_path, output_filename + '.html')
-    generate_html_file(
-        'map.html', output_html_path,
-        mapbox_access_token=mapbox_access_token,
-        mapbox_style=mapbox_style,
-        mapbox_center_longitude=str(mapbox_center_longitude),
-        mapbox_center_latitude=str(mapbox_center_latitude),
-        mapbox_zoom=str(mapbox_zoom),
-        geojson_input_path=geojson_input_path
-    )
+    if input_t0_path is None and input_t1_path is None:
+        generate_html_file(
+            'map.html', output_html_path,
+            map_long=str(map_center_longitude),
+            map_lat=str(map_center_latitude),
+            map_zoom=str(map_zoom),
+            geojson_filepath=f"./resources/{output_filename}.geojson"
+        )
+    else:
+        generate_html_file(
+            'swipe_map.html', output_html_path,
+            map_long=str(map_center_longitude),
+            map_lat=str(map_center_latitude),
+            map_zoom=str(map_zoom),
+            geojson_filepath=f"./resources/{output_filename}.geojson",
+            t0_filepath=f"./resources/{output_filename}_t0.pmtiles",
+            t1_filepath=f"./resources/{output_filename}_t1.pmtiles",
+        )
 
-def generate_overlay_map(mapbox_access_token, output_directory, output_filename):
-    mapbox_map_dir = os.path.join(output_directory, "mapbox-map")
-    overlay_map_html_path = os.path.join(mapbox_map_dir, "index.html")
+def generate_overlay_map(output_directory, output_filename):
+    mapgl_dir = os.path.join(output_directory, "mapgl-map")
+    overlay_map_html_path = os.path.join(mapgl_dir, "index.html")
     generate_html_file(
         'overlay_map.html', overlay_map_html_path,
-        mapbox_access_token=mapbox_access_token,
-        geojson_filename=f"{output_filename}.geojson"
+        geojson_filename=f"../resources/{output_filename}.geojson"
     )
