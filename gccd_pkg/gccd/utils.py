@@ -11,18 +11,39 @@ def load_html_template(template_path):
         print(f"\033[1m\033[31mError reading HTML template:\033[0m {e}")
         sys.exit(1)
 
-def copy_geojson_file(input_path, output_directory, output_filename):
+def copy_input_files(input_geojson_path, input_t0_path, input_t1_path, output_directory, output_filename):
+    resources_dir = os.path.join(output_directory, "resources")
+    os.makedirs(resources_dir, exist_ok=True)
+
+    # Copy GeoJSON file
     try:
-        # Determine the output GeoJSON filename
+        # Determine the GeoJSON filename
         geojson_output_filename = os.path.basename(f'{output_filename}.geojson')
-        # Determine the full path to the output GeoJSON file
-        geojson_output_path = os.path.join(output_directory, geojson_output_filename)
+        # Determine the full path to the GeoJSON output file
+        geojson_output_path = os.path.join(resources_dir, geojson_output_filename)
         # Copy the GeoJSON file to the outputs directory
-        copyfile(input_path, geojson_output_path)
+        copyfile(input_geojson_path, geojson_output_path)
         print(f"\033[1m\033[32mGeoJSON file copied to:\033[0m {geojson_output_path}")
     except Exception as e:
         print(f"\033[1m\033[31mError copying GeoJSON file:\033[0m {e}")
         sys.exit(1)
+    
+    # Copy t0 / t1 GeoTIFF files
+    if input_t0_path is not None and input_t1_path is not None:
+        try:
+            # Determine the GeoTIFF output filenames
+            t0_output_filename = os.path.basename(f'{output_filename}_t0.tif')
+            t1_output_filename = os.path.basename(f'{output_filename}_t1.tif')
+            # Determine the full path to the GeoTIFF output files
+            t0_output_path = os.path.join(resources_dir, t0_output_filename)
+            t1_output_path = os.path.join(resources_dir, t1_output_filename)
+            # Copy the GeoTIFF files to the outputs directory
+            copyfile(input_t0_path, t0_output_path)
+            copyfile(input_t1_path, t1_output_path)
+            print(f"\033[1m\033[32mT0 and T2 GeoTIFF files copied to:\033[0m {resources_dir}")
+        except Exception as e:
+            print(f"\033[1m\033[31mError copying GeoTIFF files:\033[0m {e}")
+            sys.exit(1)
 
 def read_geojson_file(input_path):
     try:

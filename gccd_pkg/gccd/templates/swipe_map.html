@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Change detection alert map</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.css" crossorigin="anonymous" />
+  <script src="https://unpkg.com/maplibre-gl@3.3.1/dist/maplibre-gl.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/pmtiles@2.11.0/dist/index.js"></script>
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  </style>
+</head>
+<body>
+  <style>
+	body { overflow: hidden; }
+	body * { -webkit-touch-callout: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+	.map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  </style>
+  <script src="https://cmi4earth.blob.core.windows.net/public-map-tiles/change_detection/maplibre-gl-compare.js"></script>
+  <link rel="stylesheet" href="https://cmi4earth.blob.core.windows.net/public-map-tiles/change_detection/maplibre-gl-compare.css" type="text/css" />
+  <div class="label" style="position: absolute; top: 10px; left: 10px; font-family: sans-serif; font-size: 30px; color: rgb(255, 0, 0);">BEFORE</div>
+  <div class="label" style="position: absolute; top: 10px; right: 10px; font-family: sans-serif; font-size: 30px; color: rgb(255, 0, 0);">AFTER</div>
+  <div id="comparison-container">
+    <div class="label" style="position: absolute; top: 10px; left: 10px; font-family: sans-serif; font-size: 30px; color: rgb(255, 0, 0); z-index: 100;">BEFORE</div>        
+    <div class="label" style="position: absolute; top: 10px; right: 10px; font-family: sans-serif; font-size: 30px; color: rgb(255, 0, 0); z-index: 100;">AFTER</div>
+    <div id="before" class="map">
+    </div>
+	<div id="after" class="map">
+    </div>
+  </div>
+  <script>
+    let protocol = new pmtiles.Protocol();
+    maplibregl.addProtocol("pmtiles", protocol.tile);
+
+    const sharedStyle = {
+        version: 8,
+        glyphs: "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
+        // TODO: Uncomment this when Protomaps makes sprites available
+		// sprite: 'https://protomaps.github.io/basemaps-assets/sprites/v3/light',
+        sources: {
+            "bing-tiles": {
+                type: "raster",
+                tiles: [
+                    "https://ecn.t0.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=587&mkt=en-gb&n=z",
+                    "https://ecn.t1.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=587&mkt=en-gb&n=z",
+                    "https://ecn.t2.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=587&mkt=en-gb&n=z",
+                    "https://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=587&mkt=en-gb&n=z",
+                ],
+            },
+        },
+        layers: [
+            {
+                id: "bing-tiles",
+                type: "raster",
+                source: "bing-tiles",
+                minzoom: 0,
+                maxzoom: 22,
+            },
+        ],
+    };
+
+    const addGeoJsonToMap = (map, geojsonData, bounds) => {
+        map.fitBounds(bounds, {
+            padding: 100, // Add padding around the bounds
+            maxZoom: 15,
+        });
+
+        map.addSource("geojson", {
+            type: "geojson",
+            data: geojsonData,
+        });
+
+        // Handle LineString
+        map.addLayer({
+            id: "geojson-line",
+            type: "line",
+            source: "geojson",
+            filter: ["==", "$type", "LineString"],
+            paint: {
+                "line-color": "#FF0000",
+                "line-width": 2,
+            },
+        });
+
+        // Handle Polygon
+        map.addLayer({
+            id: "geojson-polygon",
+            type: "fill",
+            source: "geojson",
+            filter: ["==", "$type", "Polygon"],
+            paint: {
+                "fill-color": "#FF0000",
+                "fill-opacity": 0.5,
+            },
+        });
+
+        // Handle Polygon and LineString labels
+        map.addLayer({
+            id: "geojson-label",
+            type: "symbol",
+            source: "geojson",
+            filter: ["in", "$type", "Polygon", "LineString"],
+            layout: {
+                "text-field": ["get", "type_of_alert"],
+                "text-font": ["Noto Sans Regular"],
+                "text-offset": [0, -0.5],
+                "text-anchor": "bottom",
+            },
+            paint: {
+                "text-color": "#FFFFFF",
+                "text-halo-color": "black",
+                "text-halo-width": 1,
+                "text-halo-blur": 1,
+            },
+        });
+
+        // Handle Point
+        map.addLayer({
+            id: "geojson-point",
+            type: "symbol",
+            source: "geojson",
+            filter: ["==", "$type", "Point"],
+            layout: {
+                "text-field": ["get", "type_of_alert"],
+                "text-font": ["Noto Sans Medium"],
+                "text-offset": [0, -0.5],
+                "text-anchor": "bottom",
+                "icon-image": "border-dot-13",
+            },
+            paint: {
+                "text-color": "#FFFFFF",
+                "text-halo-color": "black",
+                "text-halo-width": 1,
+                "text-halo-blur": 1,
+            },
+        });
+    }
+
+    const addTilesToMap = (map, tiles) => {
+        map.addSource(`${tiles}-source`, {
+            type: "raster",
+            url: `pmtiles:///${tiles}`,
+        });
+
+        map.addLayer({
+            id: `${tiles}-tiles`,
+            type: "raster",
+            source: `${tiles}-source`,
+        });
+    }
+
+    const beforeMap = new maplibregl.Map({
+        container: "before",
+        style: sharedStyle,
+        center: [map_long, map_lat],
+        zoom: 1,
+    });
+
+    const afterMap = new maplibregl.Map({
+        container: "after",
+        style: sharedStyle,
+        center: [map_long, map_lat],
+        zoom: map_zoom,
+    });
+
+    // Load GeoJSON data from a file
+    fetch("geojson_filepath")
+        .then((response) => response.json())
+        .then((geojsonData) => {
+            var bounds = new maplibregl.LngLatBounds();
+            geojsonData.features.forEach(function (feature) {
+                if (feature.geometry.type === "Point") {
+                    bounds.extend(
+                        new maplibregl.LngLat(
+                            feature.geometry.coordinates[0],
+                            feature.geometry.coordinates[1]
+                        )
+                    );
+                } else if (feature.geometry.type === "LineString") {
+                    feature.geometry.coordinates.forEach(function (coord) {
+                        bounds.extend(new maplibregl.LngLat(coord[0], coord[1]));
+                    });
+                } else if (feature.geometry.type === "Polygon") {
+                    feature.geometry.coordinates[0].forEach(function (coord) {
+                        bounds.extend(new maplibregl.LngLat(coord[0], coord[1]));
+                    });
+                }
+            });
+
+            beforeMap.on("load", function () {
+                addTilesToMap(beforeMap, "t0_filepath")
+                addGeoJsonToMap(beforeMap, geojsonData, bounds);
+            });
+
+            afterMap.on("load", function () {
+                addTilesToMap(afterMap, "t1_filepath")
+                addGeoJsonToMap(afterMap, geojsonData, bounds);
+            });
+
+        })
+        .catch((error) => console.error("Error loading GeoJSON:", error));
+
+    const container = "#comparison-container";
+
+    const map = new maplibregl.Compare(beforeMap, afterMap, container, {
+        // Set this to enable comparing two maps by mouse movement:
+        // mousemove: true
+    });
+  </script>
+</body>
+
+</html>

@@ -15,11 +15,11 @@ port = '8080'
 def main():
     # Get arguments from command line
     parser = argparse.ArgumentParser(description='Generate composite (raster and vector) MBTiles from tileserver-gl.')
-    parser.add_argument('--input', required=True, help='Path to the input GeoJSON file')
+    parser.add_argument('--geojson', required=True, help='Path to the input GeoJSON file')
     parser.add_argument('--output', help='Path to the output files')
     args = parser.parse_args()
 
-    input_geojson_path = args.input
+    input_geojson_path = args.geojson
     # Prepare output directory
     # If output flag is not provided, set the output name to match the GeoJSON filename
     if args.output is None:

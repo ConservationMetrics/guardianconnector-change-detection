@@ -5,7 +5,7 @@ import json
 import socket
 
 def generate_tileserver_config(output_directory, output_filename):
-    map_directory = os.path.join(output_directory, 'mapbox-map')
+    map_directory = os.path.join(output_directory, 'mapgl-map')
     
     # Check if config already exists
     config_path = os.path.join(map_directory, "config.json")
@@ -80,7 +80,7 @@ def serve_tileserver_gl(output_directory, output_filename, env_port):
         raise ValueError(
             f"Expected output_directory to be absolute, got [{output_directory}]"
         )
-    map_directory = os.path.join(output_directory, "mapbox-map")
+    map_directory = os.path.join(output_directory, "mapgl-map")
 
     # Generate Tileserver-GL config if not found
     config_path = os.path.join(map_directory, "config.json")

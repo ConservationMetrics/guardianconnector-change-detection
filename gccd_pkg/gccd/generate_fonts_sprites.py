@@ -3,9 +3,9 @@ import tarfile
 import requests
 
 def copy_fonts_and_sprites(output_directory):
-    mapbox_map_dir = os.path.join(output_directory, "mapbox-map")
-    output_fonts_dir = os.path.join(mapbox_map_dir, 'fonts')
-    output_sprites_dir = os.path.join(mapbox_map_dir, 'sprites')
+    mapgl_dir = os.path.join(output_directory, "mapgl-map")
+    output_fonts_dir = os.path.join(mapgl_dir, 'fonts')
+    output_sprites_dir = os.path.join(mapgl_dir, 'sprites')
     fonts_archive_url = 'https://cmi4earth.blob.core.windows.net/public-map-tiles/change_detection/fonts.tar.gz'
     sprite_dir_url = 'https://cmi4earth.blob.core.windows.net/public-map-tiles/change_detection/sprites/'
     sprite_files = [
