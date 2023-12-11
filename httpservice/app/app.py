@@ -62,6 +62,7 @@ async def make_changemaps(
         input_fp.flush()
         input_fp.seek(0)
 
+<<<<<<< HEAD
         t0 = images.get("t0")
         t1 = images.get("t1")
 
@@ -74,6 +75,9 @@ async def make_changemaps(
         # Without GeoTIFF inputs:
         else:
             gccd.flow(input_fp.name, None, None, outdir, "output")
+=======
+        gccd.flow(input_fp.name, None, None, outdir, "output")
+>>>>>>> 029aefc (Get FastAPI minimally working again)
 
         create_tarfile(outdir, output_tar)
 
