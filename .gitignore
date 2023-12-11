@@ -1,5 +1,6 @@
 /outputs/*
 !/outputs/.keep
+changemap.tar
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

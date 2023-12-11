@@ -39,7 +39,7 @@ For local development with hot-reloading:
 ## Example API call
 
 ``` sh
-curl -v -XPOST 'http://localhost:80/changemaps/' -H 'Content-Type: application/json' -H 'X-API-KEY: "your-api-key"' -d '{  "type": "FeatureCollection",
+curl -v -XPOST 'http://localhost:80/changemaps/' -H 'Content-Type: application/json' -H 'X-API-KEY: your-api-key' -d '{  "type": "FeatureCollection",
   "name": "08142023-001",
   "features": [
     {
