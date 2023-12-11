@@ -2,7 +2,9 @@ import json
 import os
 import tarfile
 import tempfile
-from typing import Any
+import base64
+from typing import Any, Optional
+
 
 import fastapi
 import gccd
@@ -42,16 +44,31 @@ def create_tarfile(directory, tar_filename):
 
 @app.post("/changemaps/", dependencies=[fastapi.Security(check_apikey_header)])
 async def make_changemaps(
-    feacoll: Any = fastapi.Body(), output_tar=fastapi.Depends(sendable_tempfile)
+    data: dict = fastapi.Body(...),
+    output_tar=fastapi.Depends(sendable_tempfile)
 ):
+    input_geojson = data.get("input_geojson")
+    input_t0 = data.get("input_t0")
+    input_t1 = data.get("input_t1")
+
     with tempfile.NamedTemporaryFile(
         "w+", prefix="input-", suffix=".json"
     ) as input_fp, tempfile.TemporaryDirectory() as outdir:
-        json.dump(feacoll, input_fp)
+
+        # Dump feacoll to temp file
+        json.dump(input_geojson, input_fp)
         input_fp.flush()
         input_fp.seek(0)
 
-        gccd.flow(input_fp.name, None, None, outdir, "output")
+        # Decode and save input_t0 and input_t1 (if provided)
+        if input_t0:
+            input_t0 = save_base64_to_tempfile(input_t0_base64, suffix=".tiff")
+
+        if input_t1:
+            input_t1 = save_base64_to_tempfile(input_t1_base64, suffix=".tiff")
+
+        # Run the GCCD flow()
+        gccd.flow(input_fp.name, input_t0, input_t1, outdir, "output")
 
         create_tarfile(outdir, output_tar)
 
@@ -59,3 +76,14 @@ async def make_changemaps(
         output_tar,
         headers={"Content-Disposition": "attachment; filename=changemap.tar"},
     )
+
+def save_base64_to_tempfile(base64_str, suffix=""):
+    """
+    Decode base64 string and write to a temporary file.
+    Return the path of the temporary file.
+    """
+    binary_data = base64.b64decode(base64_str)
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+    with open(temp_file.name, 'wb') as file:
+        file.write(binary_data)
+    return temp_file.name
