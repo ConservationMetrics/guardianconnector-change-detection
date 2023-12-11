@@ -34,12 +34,12 @@ In production:
 
 For local development with hot-reloading:
 
-    docker run -it -v /home/cmi/dev/guardianconnector-change-detection/httpservice/app:/code/app -p 80:80 gccd uvicorn app.app:app --host 0.0.0.0 --port 80 --reload
+    docker run -it -v /home/cmi/dev/guardianconnector-change-detection/httpservice/app:/code/app -p 80:80 --env-file .env gccd uvicorn app.app:app --host 0.0.0.0 --port 80 --reload
 
 ## Example API call
 
 ``` sh
-curl -v -XPOST 'https://localhost:8080/changemaps/'  -H 'Content-Type: application/json' -d '{  "type": "FeatureCollection",
+curl -v -XPOST 'http://localhost:80/changemaps/' -H 'Content-Type: application/json' -H 'X-API-KEY: "your-api-key"' -d '{  "type": "FeatureCollection",
   "name": "08142023-001",
   "features": [
     {
