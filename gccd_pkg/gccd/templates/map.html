@@ -108,7 +108,7 @@
 				source: 'geojson',
 				filter: ['in', '$type', 'Polygon', 'LineString'],
 				layout: {
-					'text-field': ['get', 'type_of_alert'],
+					'text-field': ['get', 'alert_type'],
 					'text-font': ['Noto Sans Medium'],
 					'text-offset': [0, -0.5],
 					'text-anchor': 'bottom',
@@ -128,7 +128,7 @@
 				source: 'geojson',
 				filter: ['==', '$type', 'Point'],
 				layout: {
-					'text-field': ['get', 'type_of_alert'],
+					'text-field': ['get', 'alert_type'],
 					'text-font': ['Noto Sans Medium'],
 					'text-offset': [0, -0.5],
 					'text-anchor': 'bottom',
