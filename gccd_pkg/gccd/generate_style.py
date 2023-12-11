@@ -78,7 +78,7 @@ def generate_style_with_mbtiles(raster_max_zoom, output_directory, output_filena
         "source-layer": output_filename,
         "filter": ["==", "$type", "Point"],
         "layout": {
-            'text-field': ['get', 'type_of_alert'],
+            'text-field': ['get', 'alert_type'],
             'text-font': ['Open Sans Regular'],
             'text-offset': [0, -0.5],
             'text-anchor': 'bottom',
@@ -99,7 +99,7 @@ def generate_style_with_mbtiles(raster_max_zoom, output_directory, output_filena
         "source-layer": output_filename,
         "filter": ['in', '$type', 'Polygon', 'LineString'],
         "layout": {
-            'text-field': ['get', 'type_of_alert'],
+            'text-field': ['get', 'alert_type'],
             'text-font': ['Open Sans Regular'],
             'text-offset': [0, 0.5],
             'text-anchor': 'top'

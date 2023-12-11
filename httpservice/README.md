@@ -35,3 +35,52 @@ In production:
 For local development with hot-reloading:
 
     docker run -it -v /home/cmi/dev/guardianconnector-change-detection/httpservice/app:/code/app -p 80:80 gccd uvicorn app.app:app --host 0.0.0.0 --port 80 --reload
+
+## Example API call
+
+``` sh
+curl -v -XPOST 'https://localhost:8080/changemaps/'  -H 'Content-Type: application/json' -d '{  "type": "FeatureCollection",
+  "name": "08142023-001",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "date_end_t0": "2023-09-30",
+        "date_end_t1": "2023-10-31",         
+        "alert_type": "gold mining",
+        "id": "2023101800161660100"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-54.117676498677, 3.312402112301291]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "date_end_t0": "2023-09-30",
+        "date_end_t1": "2023-10-31",        
+        "alert_type": "logging",
+        "id": "2023101800161660101"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-54.024968, 3.414382]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "date_end_t0": "2023-09-30",
+        "date_end_t1": "2023-10-31",
+        "alert_type": "land invasion",
+        "id": "2023101800161660102"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-54.017286, 3.427148]
+      }
+    }
+  ]
+}' > changemap.tar
+```
