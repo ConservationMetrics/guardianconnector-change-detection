@@ -48,27 +48,29 @@ async def make_changemaps(
     output_tar=fastapi.Depends(sendable_tempfile)
 ):
     input_geojson = data.get("input_geojson")
-    input_t0 = data.get("input_t0")
-    input_t1 = data.get("input_t1")
+    images = data.get("images", {})
 
     with tempfile.NamedTemporaryFile(
         "w+", prefix="input-", suffix=".json"
     ) as input_fp, tempfile.TemporaryDirectory() as outdir:
 
-        # Dump feacoll to temp file
+        # Dump input geojson to temp file
         json.dump(input_geojson, input_fp)
         input_fp.flush()
         input_fp.seek(0)
 
-        # Decode and save input_t0 and input_t1 (if provided)
-        if input_t0:
-            input_t0 = save_base64_to_tempfile(input_t0_base64, suffix=".tiff")
+        t0 = images.get("t0")
+        t1 = images.get("t1")
 
-        if input_t1:
-            input_t1 = save_base64_to_tempfile(input_t1_base64, suffix=".tiff")
-
-        # Run the GCCD flow()
-        gccd.flow(input_fp.name, input_t0, input_t1, outdir, "output")
+        # Run GCCD.flow()
+        # With GeoTIFF inputs:
+        if t0 and t1:
+            with WriteToTempFile(images["t0"], suffix=".tif") as t0_fp, \
+            WriteToTempFile(images["t1"], suffix=".tif") as t1_fp: \
+            gccd.flow(input_fp.name, t0_fp, t1_fp, outdir, "output")
+        # Without GeoTIFF inputs:
+        else:
+            gccd.flow(input_fp.name, None, None, outdir, "output")
 
         create_tarfile(outdir, output_tar)
 
@@ -77,13 +79,23 @@ async def make_changemaps(
         headers={"Content-Disposition": "attachment; filename=changemap.tar"},
     )
 
-def save_base64_to_tempfile(base64_str, suffix=""):
-    """
-    Decode base64 string and write to a temporary file.
-    Return the path of the temporary file.
-    """
-    binary_data = base64.b64decode(base64_str)
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-    with open(temp_file.name, 'wb') as file:
-        file.write(binary_data)
-    return temp_file.name
+class WriteToTempFile:
+    def __init__(self, base64_str, suffix=""):
+        self.base64_str = base64_str
+        self.suffix = suffix
+
+    def __enter__(self):
+        # Create a temporary file with the specified suffix
+        self.temp_file = tempfile.NamedTemporaryFile(suffix=self.suffix, delete=False)
+
+        # Decode the base64 string and write to the temporary file
+        decoded_data = base64.b64decode(self.base64_str)
+        self.temp_file.write(decoded_data)
+        self.temp_file.close()
+
+        # Return the temporary file name
+        return self.temp_file.name
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        # Delete the temporary file when the context exits
+        os.remove(self.temp_file.name)
