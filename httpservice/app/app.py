@@ -79,24 +79,6 @@ async def make_changemaps(
         input_fp.flush()
         input_fp.seek(0)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-        t0 = images.get("t0")
-        t1 = images.get("t1")
-
-        # Run GCCD.flow()
-        # With GeoTIFF inputs:
-        if t0 and t1:
-            with WriteToTempFile(images["t0"], suffix=".tif") as t0_fp, \
-            WriteToTempFile(images["t1"], suffix=".tif") as t1_fp: \
-            gccd.flow(input_fp.name, t0_fp, t1_fp, outdir, "output")
-        # Without GeoTIFF inputs:
-        else:
-            gccd.flow(input_fp.name, None, None, outdir, "output")
-=======
-        gccd.flow(input_fp.name, None, None, outdir, "output")
->>>>>>> 029aefc (Get FastAPI minimally working again)
-=======
         # Decode and save input_t0 and input_t1 (if provided)
         if input_t0:
             input_t0 = save_base64_to_tempfile(input_t0_base64, suffix=".tiff")
@@ -106,7 +88,6 @@ async def make_changemaps(
 
         # Run the GCCD flow()
         gccd.flow(input_fp.name, input_t0, input_t1, outdir, "output")
->>>>>>> 6455d80 (Receive base64 t0 and t1 inputs in JSON payload)
 
         create_tarfile(outdir, output_tar)
 
@@ -115,28 +96,6 @@ async def make_changemaps(
         headers={"Content-Disposition": "attachment; filename=changemap.tar"},
     )
 
-<<<<<<< HEAD
-class WriteToTempFile:
-    def __init__(self, base64_str, suffix=""):
-        self.base64_str = base64_str
-        self.suffix = suffix
-
-    def __enter__(self):
-        # Create a temporary file with the specified suffix
-        self.temp_file = tempfile.NamedTemporaryFile(suffix=self.suffix, delete=False)
-
-        # Decode the base64 string and write to the temporary file
-        decoded_data = base64.b64decode(self.base64_str)
-        self.temp_file.write(decoded_data)
-        self.temp_file.close()
-
-        # Return the temporary file name
-        return self.temp_file.name
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        # Delete the temporary file when the context exits
-        os.remove(self.temp_file.name)
-=======
 def save_base64_to_tempfile(base64_str, suffix=""):
     """
     Decode base64 string and write to a temporary file.
@@ -147,4 +106,3 @@ def save_base64_to_tempfile(base64_str, suffix=""):
     with open(temp_file.name, 'wb') as file:
         file.write(binary_data)
     return temp_file.name
->>>>>>> 6455d80 (Receive base64 t0 and t1 inputs in JSON payload)
