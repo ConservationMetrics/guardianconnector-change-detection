@@ -4,7 +4,7 @@ import tarfile
 import tempfile
 import base64
 from typing import Any, Optional
-
+from pydantic import BaseModel, Field
 
 import fastapi
 import gccd
@@ -41,14 +41,17 @@ def create_tarfile(directory, tar_filename):
                 relative_path = os.path.relpath(full_path, directory)
                 tar.add(full_path, arcname=relative_path)
 
+class ChangemapRequestData(BaseModel):
+    input_geojson: dict
+    images: dict = Field(default_factory=dict)
 
 @app.post("/changemaps/", dependencies=[fastapi.Security(check_apikey_header)])
 async def make_changemaps(
-    data: dict = fastapi.Body(...),
+    data: ChangemapRequestData,
     output_tar=fastapi.Depends(sendable_tempfile)
 ):
-    input_geojson = data.get("input_geojson")
-    images = data.get("images", {})
+    input_geojson = data.input_geojson
+    images = data.images
 
     with tempfile.NamedTemporaryFile(
         "w+", prefix="input-", suffix=".json"
