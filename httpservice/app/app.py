@@ -2,7 +2,9 @@ import json
 import os
 import tarfile
 import tempfile
-from typing import Any
+import base64
+from typing import Any, Optional
+from pydantic import BaseModel, Field
 
 import fastapi
 import gccd
@@ -39,19 +41,39 @@ def create_tarfile(directory, tar_filename):
                 relative_path = os.path.relpath(full_path, directory)
                 tar.add(full_path, arcname=relative_path)
 
+class ChangemapRequestData(BaseModel):
+    input_geojson: dict
+    images: dict = Field(default_factory=dict)
 
 @app.post("/changemaps/", dependencies=[fastapi.Security(check_apikey_header)])
 async def make_changemaps(
-    feacoll: Any = fastapi.Body(), output_tar=fastapi.Depends(sendable_tempfile)
+    data: ChangemapRequestData,
+    output_tar=fastapi.Depends(sendable_tempfile)
 ):
+    input_geojson = data.input_geojson
+    images = data.images
+
     with tempfile.NamedTemporaryFile(
         "w+", prefix="input-", suffix=".json"
     ) as input_fp, tempfile.TemporaryDirectory() as outdir:
-        json.dump(feacoll, input_fp)
+
+        # Dump input geojson to temp file
+        json.dump(input_geojson, input_fp)
         input_fp.flush()
         input_fp.seek(0)
 
-        gccd.flow(input_fp.name, outdir, "output")
+        t0 = images.get("t0")
+        t1 = images.get("t1")
+
+        # Run GCCD.flow()
+        # With GeoTIFF inputs:
+        if t0 and t1:
+            with WriteToTempFile(images["t0"], suffix=".tif") as t0_fp, \
+            WriteToTempFile(images["t1"], suffix=".tif") as t1_fp: \
+            gccd.flow(input_fp.name, t0_fp, t1_fp, outdir, "output")
+        # Without GeoTIFF inputs:
+        else:
+            gccd.flow(input_fp.name, None, None, outdir, "output")
 
         create_tarfile(outdir, output_tar)
 
@@ -59,3 +81,24 @@ async def make_changemaps(
         output_tar,
         headers={"Content-Disposition": "attachment; filename=changemap.tar"},
     )
+
+class WriteToTempFile:
+    def __init__(self, base64_str, suffix=""):
+        self.base64_str = base64_str
+        self.suffix = suffix
+
+    def __enter__(self):
+        # Create a temporary file with the specified suffix
+        self.temp_file = tempfile.NamedTemporaryFile(suffix=self.suffix, delete=False)
+
+        # Decode the base64 string and write to the temporary file
+        decoded_data = base64.b64decode(self.base64_str)
+        self.temp_file.write(decoded_data)
+        self.temp_file.close()
+
+        # Return the temporary file name
+        return self.temp_file.name
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        # Delete the temporary file when the context exits
+        os.remove(self.temp_file.name)
