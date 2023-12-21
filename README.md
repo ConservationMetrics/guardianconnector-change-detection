@@ -11,7 +11,7 @@ You can execute this script in one of three ways:
 
 The script follows these steps:
 
-1. Copy GeoJSON file to outputs directory
+1. Copy GeoJSON file to outputs directory, and generate a JPG version of the GeoTIFFs (if provided)
 2. Get bounding box for GeoJSON (all features)
 3. Generate PMTiles from GeoTIFFS (if provided)
 4. Generate HTML map for previewing change detection alert (a swipe map if GeoTIFFs are provided)
@@ -93,10 +93,13 @@ example/
 │       └── example-vector.mbtiles
 └─ resources
     ├── example.geojson
+    ├── example_t0.jpg
+    ├── example_t1.jpg
     ├── example_t0.pmtiles
     ├── example_t1.pmtiles
     ├── example_t0.tif
     └── example_t1.tif
+
 ```
 
 ## How to use the outputs

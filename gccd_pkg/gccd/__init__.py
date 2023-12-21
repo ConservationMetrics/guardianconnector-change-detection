@@ -10,7 +10,7 @@ from gccd.generate_tiles import (
 )
 from gccd.generate_style import generate_style_with_mbtiles
 from gccd.generate_fonts_sprites import copy_fonts_and_sprites
-from gccd.utils import copy_input_files
+from gccd.utils import copy_input_files, generate_jpgs_from_geotiffs
 
 
 # Get environment variables
@@ -25,8 +25,10 @@ raster_buffer_size = os.getenv("RASTER_BUFFER_SIZE")
 
 def flow(input_geojson_path, input_t0_path, input_t1_path, output_directory, output_filename):
 
-    # STEP 1: Copy input files to resources/
+    # STEP 1: Copy input files to resources, and generate a JPG version of the GeoTIFFs (if provided)
     copy_input_files(input_geojson_path, input_t0_path, input_t1_path, output_directory, output_filename)
+    if input_t0_path is not None and input_t1_path is not None:
+        generate_jpgs_from_geotiffs(input_t0_path, input_t1_path, output_directory, output_filename)
 
     # STEP 2: Get bounding box for GeoJSON
     bounding_box = get_bounding_box(input_geojson_path, raster_buffer_size)

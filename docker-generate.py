@@ -2,7 +2,7 @@ import os
 import sys
 import argparse
 import traceback
-from gccd.utils import copy_input_files
+from gccd.utils import copy_input_files, generate_jpgs_from_geotiffs
 from gccd.calculate_bbox import get_bounding_box
 from gccd.generate_maps import generate_html_map, generate_overlay_map
 from gccd.generate_tiles import (
@@ -65,8 +65,10 @@ def main():
         if os.path.exists(f"{output_directory}\mapgl-map\config.json"):
             os.remove(f"{output_directory}\config.json")    
 
-        # STEP 1: Copy input files to resources
+        # STEP 1: Copy input files to resources, and generate a JPG version of the GeoTIFFs (if provided)
         copy_input_files(input_geojson_path, input_t0_path, input_t1_path, output_directory, output_filename)
+        if input_t0_path is not None and input_t1_path is not None:
+            generate_jpgs_from_geotiffs(input_t0_path, input_t1_path, output_directory, output_filename)
 
         # STEP 2: Get bounding box for GeoJSON
         bounding_box = get_bounding_box(input_geojson_path, raster_buffer_size)
